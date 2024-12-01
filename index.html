@@ -1,56 +1,58 @@
-<!DOCTYPE html> <meta charset="UTF-8" />
-<meta
-  name="viewport"
-  content="width=device-width, initial-scale=1.0"
-/>
-<title>JS Advent Postcard Game</title>
-<link rel="stylesheet" href="styles.css" />
-<script src="scripts.js"></script>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0"
-    />
-    <title>Game</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="background scene-street"></div>
-    <main class="game-container">
-      <header>
-        <div class="money">10000 UAH</div>
-      </header>
-      <div class="scene scene-street"></div>
-      <footer>
-        <div class="helper">
-          <div class="avatar"></div>
-          <div class="dialog">Don't forget about Christmas Tree</div>
+<!DOCTYPE html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JS Advent Postcard Game</title>
+  <link rel="stylesheet" href="assets/styles/styles.css" />
+  <script src="assets/scripts/scripts.js" defer></script>
+</head>
+
+<body>
+  <div class="background" id="background"></div>
+  <main class="game-container" id="game-container">
+    <header>
+      <div class="buttons">
+        <div class="button tree-button hidden" id="tree-button">
+          <img src="assets/icons/tree.svg" alt="Christmas Tree" />
         </div>
-        <div class="smartphone">
-          <svg
-            width="44"
-            height="44"
-            viewBox="0 0 44 44"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M11 9.16667C11 7.14162 12.6416 5.5 14.6667 5.5H29.3333C31.3584 5.5 33 7.14162 33 9.16667V34.8333C33 36.8584 31.3584 38.5 29.3333 38.5H14.6667C12.6416 38.5 11 36.8584 11 34.8333V9.16667Z"
-              fill="black"
-              fill-opacity="0.15"
-            />
-            <path
-              d="M22 33.0183V33M14.6667 5.5H29.3333C31.3584 5.5 33 7.14162 33 9.16667V34.8333C33 36.8584 31.3584 38.5 29.3333 38.5H14.6667C12.6416 38.5 11 36.8584 11 34.8333V9.16667C11 7.14162 12.6416 5.5 14.6667 5.5Z"
-              stroke="black"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
+        <div class="button street-button hidden" id="street-button">
+          <img src="assets/icons/snowflake.svg" alt="Street" />
         </div>
-      </footer>
-    </main>
-  </body>
+        <div class="button home-button hidden" id="home-button">
+          <img src="assets/icons/home.svg" alt="Home" />
+        </div>
+        <div class="button kitchen-button hidden" id="kitchen-button">
+          <img src="assets/icons/kitchen.svg" alt="Kitchen" />
+        </div>
+      </div>
+      <div class="money"><span id="money">0</span> UAH</div>
+    </header>
+    <div class="scene" id="scene">
+      <div id="snowflake-container"></div>
+      <div class="smartphone hidden" id="smartphone">
+        <div class="screen">
+          <div class="todo-app">
+            <h2>To-Do List</h2>
+            <ul>
+              <li>Перше завдання</li>
+              <li>Друге завдання</li>
+              <li>Третє завдання</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer>
+      <div class="helper">
+        <div class="avatar"></div>
+        <div class="dialog">Don't forget about Christmas Tree</div>
+      </div>
+      <div class="smartphone-button hidden" id="smartphone-button">
+        <img src="assets/icons/smartphone.svg" alt="Smartphone" />
+      </div>
+    </footer>
+  </main>
+</body>
+
 </html>

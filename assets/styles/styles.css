@@ -1,0 +1,381 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body,
+html {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.background {
+  height: 100%;
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-size: contain;
+  background-repeat: repeat;
+  background-position: center;
+  background-color: #eafbf5;
+  filter: blur(5px);
+}
+
+.background.scene-street {
+  background-image: url('../images/scene-street.png');
+}
+
+.background.scene-tree {
+  background-image: url('../images/scene-tree.png');
+}
+
+.background.scene-tree-1 {
+  background-image: url('../images/scene-tree-1.png');
+}
+
+.background.scene-tree-2 {
+  background-image: url('../images/scene-tree-2.png');
+}
+
+.background.scene-tree-3 {
+  background-image: url('../images/scene-tree-3.png');
+}
+
+.background.scene-tree-4 {
+  background-image: url('../images/scene-tree-4.png');
+}
+
+.background.scene-tree-5 {
+  background-image: url('../images/scene-tree-5.png');
+}
+
+.background.scene-tree-6 {
+  background-image: url('../images/scene-tree-6.png');
+}
+
+.background.scene-tree-7 {
+  background-image: url('../images/scene-tree-7.png');
+}
+
+.background.scene-home {
+  background-image: url('../images/scene-home.png');
+}
+
+.background.scene-kitchen {
+  background-image: url('../images/scene-kitchen.png');
+}
+
+.background.scene-smartphone {
+  background-image: url('../images/scene-smartphone.png');
+}
+
+.game-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90vw;
+  max-width: 600px;
+  height: 100vh;
+  background-color: #eafbf5;
+  border: 2px solid #000;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  align-items: stretch;
+  align-content: stretch;
+  overflow: hidden;
+}
+
+.game-container.scene-home {
+  background-color: #fae1a9;
+}
+
+.game-container.scene-kitchen {
+  background-color: #f2fafc;
+}
+
+.game-container>header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.game-container>header>.buttons {
+  display: flex;
+}
+
+.game-container>header>.buttons>.button {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: .5rem;
+  border-radius: 50%;
+  transition: all .2s ease-out;
+}
+
+.game-container>header>.buttons>.button:hover {
+  background-color: rgb(68 200 207 / 20%);
+}
+
+.game-container>header>.buttons>.button:active {
+  background-color: rgb(68 200 207 / 50%);
+}
+
+.game-container>header>.money {
+  background-color: rgb(68 200 207);
+  color: #fff;
+  border-radius: 5px;
+  padding: 1rem;
+}
+
+.game-container.scene-home>header>.money {
+  background-color: rgb(243 176 58);
+}
+
+.game-container.scene-kitchen>header>.money {
+  background-color: rgb(255 96 111);
+}
+
+.game-container>.scene {
+  flex: 1;
+  width: 100%;
+  position: relative;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  overflow: hidden;
+}
+
+.game-container>.scene>.smartphone {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  max-height: 600px;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  left: 50%;
+  border: 16px solid black;
+  border-radius: 36px;
+  padding: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  background: white;
+  z-index: 2;
+}
+
+.screen {
+  width: 100%;
+  height: 100%;
+  overflow-y: scroll;
+  background: #eaeaea;
+}
+
+.todo-app {
+  padding: 20px;
+}
+
+.todo-app h2 {
+  margin: 0 0 20px 0;
+}
+
+.todo-app ul {
+  padding: 0;
+  list-style: none;
+}
+
+.todo-app ul li {
+  background: white;
+  margin: 5px 0;
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+.game-container>.scene.scene-street {
+  background-image: url('../images/scene-street.png');
+}
+
+.game-container>.scene.scene-tree {
+  background-image: url('../images/scene-tree.png');
+}
+
+.game-container>.scene.scene-tree-1 {
+  background-image: url('../images/scene-tree-1.png');
+}
+
+.game-container>.scene.scene-tree-2 {
+  background-image: url('../images/scene-tree-2.png');
+}
+
+.game-container>.scene.scene-tree-3 {
+  background-image: url('../images/scene-tree-3.png');
+}
+
+.game-container>.scene.scene-tree-4 {
+  background-image: url('../images/scene-tree-4.png');
+}
+
+.game-container>.scene.scene-tree-5 {
+  background-image: url('../images/scene-tree-5.png');
+}
+
+.game-container>.scene.scene-tree-6 {
+  background-image: url('../images/scene-tree-6.png');
+}
+
+.game-container>.scene.scene-tree-7 {
+  background-image: url('../images/scene-tree-7.png');
+}
+
+.game-container>.scene.scene-home {
+  background-image: url('../images/scene-home.png');
+}
+
+.game-container>.scene.scene-home-1 {
+  background-image: url('../images/scene-home-1.png');
+}
+
+.game-container>.scene.scene-home-2 {
+  background-image: url('../images/scene-home-2.png');
+}
+
+.game-container>.scene.scene-home-3 {
+  background-image: url('../images/scene-home-3.png');
+}
+
+.game-container>.scene.scene-home-4 {
+  background-image: url('../images/scene-home-4.png');
+}
+
+.game-container>.scene.scene-home-5 {
+  background-image: url('../images/scene-home-5.png');
+}
+
+.game-container>.scene.scene-home-6 {
+  background-image: url('../images/scene-home-6.png');
+}
+
+.game-container>.scene.scene-home-7 {
+  background-image: url('../images/scene-home-7.png');
+}
+
+.game-container>.scene.scene-kitchen {
+  background-image: url('../images/scene-kitchen.png');
+}
+
+.game-container>.scene.scene-smartphone {
+  background-image: url('../images/scene-smartphone.png');
+}
+
+.game-container>footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.game-container>footer>.helper {
+  flex: 1;
+  display: flex;
+}
+
+.game-container>footer>.helper>.avatar {
+  flex: none;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background-image: url('../images/avatar.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  box-shadow: 1px 1px 3px 1px #0000002e;
+  border: 1px solid #8099b5;
+}
+
+.game-container>footer>.helper>.dialog {
+  flex: 1;
+  padding: .5rem 1rem;
+  border-inline: 1rem solid #0000;
+  border-radius: calc(2rem) / 1rem;
+  mask: radial-gradient(100% 100% at 0 0, #0000 99%, #000 102%) 0 100% / 1rem 1rem no-repeat, linear-gradient(#000 0 0) padding-box;
+  background: linear-gradient(135deg, #21cbd4, #ffa08e) border-box;
+  color: #eafbf5;
+  border-bottom-left-radius: 0 0;
+  text-shadow: 1px 1px black;
+  box-shadow: 1px 1px black;
+}
+
+.game-container.scene-home>footer>.helper>.dialog {
+  background: linear-gradient(135deg, #da5330, #fcc05f) border-box;
+}
+
+.game-container.scene-kitchen>footer>.helper>.dialog {
+  background: linear-gradient(135deg, #c1b8b5, #f86572) border-box;
+}
+
+.game-container>footer>.smartphone-button {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: .5rem;
+  border-radius: 50%;
+  transition: all .2s ease-out;
+}
+
+.game-container>footer>.smartphone-button:hover {
+  background-color: rgb(68 200 207 / 20%);
+}
+
+.game-container>footer>.smartphone-button:active {
+  background-color: rgb(68 200 207 / 50%);
+}
+
+.snowflake {
+  position: absolute;
+  top: 0;
+  font-size: 2rem;
+  color: white;
+  animation: fall linear infinite;
+  cursor: default;
+  z-index: 0;
+
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Old versions of Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  /* Non-prefixed version, currently
+                                supported by Chrome, Edge, Opera and Firefox */
+}
+
+.snowflake.money {
+  cursor: pointer;
+  z-index: 1;
+}
+
+@keyframes fall {
+  to {
+    transform: translateY(100vh);
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
+.invisible {
+  visibility: hidden !important;
+}
