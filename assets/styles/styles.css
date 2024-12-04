@@ -6,7 +6,7 @@
 
 body,
 html {
-  font-family: 'Courier New', Courier, monospace;
+  font-family: "Courier New", Courier, monospace;
 }
 
 .background {
@@ -24,51 +24,124 @@ html {
 }
 
 .background.scene-street {
-  background-image: url('../images/scene-street.png');
+  background-image: url("../images/scene-street.png");
 }
 
 .background.scene-tree {
-  background-image: url('../images/scene-tree.png');
+  background-image: url("../images/scene-tree.png");
 }
 
 .background.scene-tree-1 {
-  background-image: url('../images/scene-tree-1.png');
+  background-image: url("../images/scene-tree-1.png");
 }
 
 .background.scene-tree-2 {
-  background-image: url('../images/scene-tree-2.png');
+  background-image: url("../images/scene-tree-2.png");
 }
 
 .background.scene-tree-3 {
-  background-image: url('../images/scene-tree-3.png');
+  background-image: url("../images/scene-tree-3.png");
 }
 
 .background.scene-tree-4 {
-  background-image: url('../images/scene-tree-4.png');
+  background-image: url("../images/scene-tree-4.png");
 }
 
 .background.scene-tree-5 {
-  background-image: url('../images/scene-tree-5.png');
+  background-image: url("../images/scene-tree-5.png");
 }
 
 .background.scene-tree-6 {
-  background-image: url('../images/scene-tree-6.png');
+  background-image: url("../images/scene-tree-6.png");
 }
 
 .background.scene-tree-7 {
-  background-image: url('../images/scene-tree-7.png');
+  background-image: url("../images/scene-tree-7.png");
 }
 
 .background.scene-home {
-  background-image: url('../images/scene-home.png');
+  background-image: url("../images/scene-home.png");
 }
 
 .background.scene-kitchen {
-  background-image: url('../images/scene-kitchen.png');
+  background-image: url("../images/scene-kitchen.png");
 }
 
 .background.scene-smartphone {
-  background-image: url('../images/scene-smartphone.png');
+  background-image: url("../images/scene-smartphone.png");
+}
+
+.greeting-card-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #21cbd442, #ffa08e5c) border-box;
+  z-index: 9998;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.greeting-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  max-width: 600px;
+  background: #fff;
+  padding: 20px;
+  border: 2px solid #cccccc;
+  border-radius: 15px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  z-index: 9999;
+}
+
+.greeting-card #greeting-form {
+  display: flex;
+  flex-direction: column;
+}
+
+#greeting-form div,
+#greeting-form input,
+#greeting-form textarea {
+  margin-bottom: 1rem;
+  padding: .5rem;
+  font-size: 1rem;
+  border-radius: 5px;
+}
+
+#greeting-form #greeting-link {
+  display: flex;
+  justify-content: space-evenly;
+}
+
+.greeting-card h1 {
+  color: #ff6347;
+}
+
+.greeting-card p {
+  font-size: 18px;
+  color: #333333;
+}
+
+.greeting-card button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  border: none;
+  background-color: #ff6347; /* Томатний червоний колір */
+  color: white;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.greeting-card button:hover {
+  background-color: #ff4500; /* Темно-томатний червоний колір */
 }
 
 .game-container {
@@ -98,7 +171,7 @@ html {
   background-color: #f2fafc;
 }
 
-.game-container>header {
+.game-container > header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -107,43 +180,43 @@ html {
   font-weight: bold;
 }
 
-.game-container>header>.buttons {
+.game-container > header > .buttons {
   display: flex;
 }
 
-.game-container>header>.buttons>.button {
+.game-container > header > .buttons > .button {
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: .5rem;
+  padding: 0.5rem;
   border-radius: 50%;
-  transition: all .2s ease-out;
+  transition: all 0.2s ease-out;
 }
 
-.game-container>header>.buttons>.button:hover {
+.game-container > header > .buttons > .button:hover {
   background-color: rgb(68 200 207 / 20%);
 }
 
-.game-container>header>.buttons>.button:active {
+.game-container > header > .buttons > .button:active {
   background-color: rgb(68 200 207 / 50%);
 }
 
-.game-container>header>.money {
+.game-container > header > .money {
   background-color: rgb(68 200 207);
   color: #fff;
   border-radius: 5px;
   padding: 1rem;
 }
 
-.game-container.scene-home>header>.money {
+.game-container.scene-home > header > .money {
   background-color: rgb(243 176 58);
 }
 
-.game-container.scene-kitchen>header>.money {
+.game-container.scene-kitchen > header > .money {
   background-color: rgb(255 96 111);
 }
 
-.game-container>.scene {
+.game-container > .scene {
   flex: 1;
   width: 100%;
   position: relative;
@@ -153,7 +226,7 @@ html {
   overflow: hidden;
 }
 
-.game-container>.scene>.smartphone {
+.game-container > .scene > .smartphone {
   position: absolute;
   width: 50%;
   height: 100%;
@@ -196,83 +269,83 @@ html {
   border: 1px solid #ccc;
 }
 
-.game-container>.scene.scene-street {
-  background-image: url('../images/scene-street.png');
+.game-container > .scene.scene-street {
+  background-image: url("../images/scene-street.png");
 }
 
-.game-container>.scene.scene-tree {
-  background-image: url('../images/scene-tree.png');
+.game-container > .scene.scene-tree {
+  background-image: url("../images/scene-tree.png");
 }
 
-.game-container>.scene.scene-tree-1 {
-  background-image: url('../images/scene-tree-1.png');
+.game-container > .scene.scene-tree-1 {
+  background-image: url("../images/scene-tree-1.png");
 }
 
-.game-container>.scene.scene-tree-2 {
-  background-image: url('../images/scene-tree-2.png');
+.game-container > .scene.scene-tree-2 {
+  background-image: url("../images/scene-tree-2.png");
 }
 
-.game-container>.scene.scene-tree-3 {
-  background-image: url('../images/scene-tree-3.png');
+.game-container > .scene.scene-tree-3 {
+  background-image: url("../images/scene-tree-3.png");
 }
 
-.game-container>.scene.scene-tree-4 {
-  background-image: url('../images/scene-tree-4.png');
+.game-container > .scene.scene-tree-4 {
+  background-image: url("../images/scene-tree-4.png");
 }
 
-.game-container>.scene.scene-tree-5 {
-  background-image: url('../images/scene-tree-5.png');
+.game-container > .scene.scene-tree-5 {
+  background-image: url("../images/scene-tree-5.png");
 }
 
-.game-container>.scene.scene-tree-6 {
-  background-image: url('../images/scene-tree-6.png');
+.game-container > .scene.scene-tree-6 {
+  background-image: url("../images/scene-tree-6.png");
 }
 
-.game-container>.scene.scene-tree-7 {
-  background-image: url('../images/scene-tree-7.png');
+.game-container > .scene.scene-tree-7 {
+  background-image: url("../images/scene-tree-7.png");
 }
 
-.game-container>.scene.scene-home {
-  background-image: url('../images/scene-home.png');
+.game-container > .scene.scene-home {
+  background-image: url("../images/scene-home.png");
 }
 
-.game-container>.scene.scene-home-1 {
-  background-image: url('../images/scene-home-1.png');
+.game-container > .scene.scene-home-1 {
+  background-image: url("../images/scene-home-1.png");
 }
 
-.game-container>.scene.scene-home-2 {
-  background-image: url('../images/scene-home-2.png');
+.game-container > .scene.scene-home-2 {
+  background-image: url("../images/scene-home-2.png");
 }
 
-.game-container>.scene.scene-home-3 {
-  background-image: url('../images/scene-home-3.png');
+.game-container > .scene.scene-home-3 {
+  background-image: url("../images/scene-home-3.png");
 }
 
-.game-container>.scene.scene-home-4 {
-  background-image: url('../images/scene-home-4.png');
+.game-container > .scene.scene-home-4 {
+  background-image: url("../images/scene-home-4.png");
 }
 
-.game-container>.scene.scene-home-5 {
-  background-image: url('../images/scene-home-5.png');
+.game-container > .scene.scene-home-5 {
+  background-image: url("../images/scene-home-5.png");
 }
 
-.game-container>.scene.scene-home-6 {
-  background-image: url('../images/scene-home-6.png');
+.game-container > .scene.scene-home-6 {
+  background-image: url("../images/scene-home-6.png");
 }
 
-.game-container>.scene.scene-home-7 {
-  background-image: url('../images/scene-home-7.png');
+.game-container > .scene.scene-home-7 {
+  background-image: url("../images/scene-home-7.png");
 }
 
-.game-container>.scene.scene-kitchen {
-  background-image: url('../images/scene-kitchen.png');
+.game-container > .scene.scene-kitchen {
+  background-image: url("../images/scene-kitchen.png");
 }
 
-.game-container>.scene.scene-smartphone {
-  background-image: url('../images/scene-smartphone.png');
+.game-container > .scene.scene-smartphone {
+  background-image: url("../images/scene-smartphone.png");
 }
 
-.game-container>footer {
+.game-container > footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -281,17 +354,17 @@ html {
   font-weight: bold;
 }
 
-.game-container>footer>.helper {
+.game-container > footer > .helper {
   flex: 1;
   display: flex;
 }
 
-.game-container>footer>.helper>.avatar {
+.game-container > footer > .helper > .avatar {
   flex: none;
   width: 4rem;
   height: 4rem;
   border-radius: 50%;
-  background-image: url('../images/avatar.png');
+  background-image: url("../images/avatar.png");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -299,12 +372,14 @@ html {
   border: 1px solid #8099b5;
 }
 
-.game-container>footer>.helper>.dialog {
+.game-container > footer > .helper > .dialog {
   flex: 1;
-  padding: .5rem 1rem;
+  padding: 0.5rem 1rem;
   border-inline: 1rem solid #0000;
   border-radius: calc(2rem) / 1rem;
-  mask: radial-gradient(100% 100% at 0 0, #0000 99%, #000 102%) 0 100% / 1rem 1rem no-repeat, linear-gradient(#000 0 0) padding-box;
+  mask: radial-gradient(100% 100% at 0 0, #0000 99%, #000 102%) 0 100% / 1rem
+      1rem no-repeat,
+    linear-gradient(#000 0 0) padding-box;
   background: linear-gradient(135deg, #21cbd4, #ffa08e) border-box;
   color: #eafbf5;
   border-bottom-left-radius: 0 0;
@@ -312,28 +387,28 @@ html {
   box-shadow: 1px 1px black;
 }
 
-.game-container.scene-home>footer>.helper>.dialog {
+.game-container.scene-home > footer > .helper > .dialog {
   background: linear-gradient(135deg, #da5330, #fcc05f) border-box;
 }
 
-.game-container.scene-kitchen>footer>.helper>.dialog {
+.game-container.scene-kitchen > footer > .helper > .dialog {
   background: linear-gradient(135deg, #c1b8b5, #f86572) border-box;
 }
 
-.game-container>footer>.smartphone-button {
+.game-container > footer > .smartphone-button {
   display: flex;
   align-items: center;
   cursor: pointer;
-  padding: .5rem;
+  padding: 0.5rem;
   border-radius: 50%;
-  transition: all .2s ease-out;
+  transition: all 0.2s ease-out;
 }
 
-.game-container>footer>.smartphone-button:hover {
+.game-container > footer > .smartphone-button:hover {
   background-color: rgb(68 200 207 / 20%);
 }
 
-.game-container>footer>.smartphone-button:active {
+.game-container > footer > .smartphone-button:active {
   background-color: rgb(68 200 207 / 50%);
 }
 
