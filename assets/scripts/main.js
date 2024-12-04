@@ -177,6 +177,7 @@ class Greeting {
       Storage.set(Greeting.hashParam, this.#hash);
       DOMHelper.hideElements(cardElement, overlayElement);
       DOMHelper.removeElements(cardElement, overlayElement);
+      GameController.start();
     });
   }
 
@@ -209,6 +210,144 @@ class Greeting {
   }
 }
 
+const TREE_SIZE = Symbol('TREE_SIZE');
+
+class GameController {
+  static start() {
+    SceneController.instance.init(STREET_SCENE);
+  }
+
+  static get treeSize() {
+    return Storage.get(TREE_SIZE.toString()) || 0;
+  }
+}
+
+const STREET_SCENE = Symbol('STREET_SCENE');
+const TREE_SCENE = Symbol('TREE_SCENE');
+const HOME_SCENE = Symbol('HOME_SCENE');
+const KITCHEN_SCENE = Symbol('KITCHEN_SCENE');
+const SMARTPHONE_SCENE = Symbol('SMARTPHONE_SCENE');
+
+const sceneDict = {
+  [STREET_SCENE]: {
+    name: 'street',
+    buttons: [
+      TREE_SCENE,
+      HOME_SCENE,
+      KITCHEN_SCENE,
+      SMARTPHONE_SCENE,
+    ],
+  },
+  [TREE_SCENE]: {
+    name: 'tree',
+    buttons: [STREET_SCENE, SMARTPHONE_SCENE],
+  },
+  [HOME_SCENE]: {
+    name: 'home',
+    buttons: [
+      TREE_SCENE,
+      STREET_SCENE,
+      KITCHEN_SCENE,
+      SMARTPHONE_SCENE,
+    ],
+  },
+  [KITCHEN_SCENE]: {
+    name: 'kitchen',
+    buttons: [HOME_SCENE, SMARTPHONE_SCENE],
+  },
+  [SMARTPHONE_SCENE]: {
+    name: 'smartphone',
+    buttons: [
+      STREET_SCENE,
+      TREE_SCENE,
+      HOME_SCENE,
+      KITCHEN_SCENE,
+      SMARTPHONE_SCENE,
+    ],
+  },
+};
+
+class SceneController {
+  #scenes = {};
+  #currentScene;
+  static #instance;
+
+  static get instance() {
+    if (!SceneController.#instance) {
+      SceneController.#instance = new SceneController();
+    }
+
+    return SceneController.#instance;
+  }
+
+  init(scene) {
+    this.loadScenes();
+    this.change(scene);
+  }
+
+  loadScenes() {
+    Object.getOwnPropertySymbols(sceneDict).forEach((key) => {
+      const sceneData = sceneDict[key];
+      this.#scenes[key] = new Scene(sceneData);
+
+      const buttonId = `${sceneData.name}-button`;
+      const buttonElement = document.getElementById(buttonId);
+      buttonElement.addEventListener('click', () => {
+        SceneController.instance.change(key);
+      });
+    });
+  }
+
+  change(scene) {
+    if (!this.#scenes[scene]) return;
+
+    const sceneInstance = this.#scenes[scene];
+
+    const sceneContainer = document.getElementById('scene');
+    const gameContainer = document.getElementById('game-container');
+    const background = document.getElementById('background');
+
+    if (this.#currentScene) {
+      sceneContainer.classList.remove(this.#currentScene.className);
+      gameContainer.classList.remove(this.#currentScene.className);
+      background.classList.remove(this.#currentScene.className);
+    }
+
+    this.#currentScene = sceneInstance;
+
+    sceneContainer.classList.add(sceneInstance.className);
+    gameContainer.classList.add(sceneInstance.className);
+    background.classList.add(sceneInstance.className);
+
+    if ([TREE_SCENE, HOME_SCENE].includes(scene)) {
+      const sceneTreeClass = `${sceneInstance.className}-${GameController.treeSize}`;
+      sceneContainer.classList.add(sceneTreeClass);
+      background.classList.add(sceneTreeClass);
+    }
+
+    Object.getOwnPropertySymbols(this.#scenes).forEach((key) => {
+      const scene = this.#scenes[key];
+      const buttonElement = document.getElementById(
+        `${scene.name}-button`
+      );
+      if (sceneInstance.buttons.includes(key)) {
+        buttonElement.classList.remove('hidden');
+      } else {
+        buttonElement.classList.add('hidden');
+      }
+    });
+  }
+}
+
+class Scene {
+  constructor({ name, buttons }) {
+    this.name = name;
+    this.buttons = buttons;
+    this.className = `scene-${name}`;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  Greeting.instance.greet();
+  const isViewed = Greeting.instance.greet();
+  if (isViewed) GameController.start();
 });
