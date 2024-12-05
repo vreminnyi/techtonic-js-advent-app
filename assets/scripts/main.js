@@ -15,10 +15,17 @@ const MONEY = Symbol('MONEY');
 // Classes
 class Encoder {
   static encode(text) {
+    if (typeof text !== 'string') {
+      throw new TypeError('Input must be a string');
+    }
     return btoa(encodeURIComponent(text));
   }
 
   static decode(encodedText) {
+    if (typeof encodedText !== 'string') {
+      console.error('Decoding error: Input must be a string');
+      return null;
+    }
     try {
       return decodeURIComponent(atob(encodedText));
     } catch (e) {
@@ -244,7 +251,9 @@ class GameController {
   }
 
   constructor() {
-    this.#money = Storage.get(MONEY);
+    this.#money = Number(
+      Storage.get(MONEY.toString()) ?? this.#money
+    );
     this.#moneyContainer = document.getElementById('money');
   }
 
@@ -252,6 +261,7 @@ class GameController {
     this.#initGames();
     SceneController.instance.init(STREET_SCENE);
     SmartphoneController.instance.turnOn();
+    this.drawMoney();
   }
 
   get treeSize() {
@@ -265,18 +275,19 @@ class GameController {
     });
   }
 
-  startGame(game) {
+  startGame(game, options) {
     if (!this.#games[game]) return;
-    return this.#games[game].init();
+    return this.#games[game].init(options);
   }
 
   changeMoney(change) {
     this.#money += change;
+    Storage.set(MONEY.toString(), this.#money);
     this.drawMoney();
   }
 
   drawMoney() {
-    this.#moneyContainer.innerText = money;
+    this.#moneyContainer.innerText = this.#money;
   }
 }
 
@@ -298,9 +309,12 @@ class SnowflakeGame extends Game {
   #numberOfSnowflakes = 100;
   #numberOfMoney = 5;
   #snowflakeClassName = 'snowflake';
+  #moneyClassName = 'money';
+  #container;
 
-  constructor() {
-    super();
+  constructor(controller, options) {
+    super(controller, options);
+
     this.#snowflakeEmoji =
       this.options.snowflakeEmoji || this.#snowflakeEmoji;
     this.#moneyEmoji = this.options.moneyEmoji || this.#moneyEmoji;
@@ -312,9 +326,17 @@ class SnowflakeGame extends Game {
       this.options.numberOfMoney || this.#numberOfMoney;
     this.#snowflakeClassName =
       this.options.snowflakeClassName || this.#snowflakeClassName;
+    this.#moneyClassName =
+      this.options.moneyClassName || this.#moneyClassName;
   }
 
-  init() {
+  init(options) {
+    this.#container =
+      options.container ||
+      document.getElementById('snowflake-effect-container');
+
+    if (!this.#container) return;
+
     for (let i = 0; i < this.#numberOfSnowflakes; i++) {
       setTimeout(() => {
         this.createSnowflake(i);
@@ -322,31 +344,38 @@ class SnowflakeGame extends Game {
     }
   }
 
+  getStep() {
+    return Math.round(this.#numberOfSnowflakes / this.#numberOfMoney);
+  }
+
   createSnowflake(i) {
-    const step = Math.round(
-      this.#numberOfSnowflakes / this.#numberOfMoney
-    );
+    const step = this.getStep();
     const isMoney = i % step === 0 && i !== 0;
     const snowflake = document.createElement('div');
+
+    snowflake.classList.add(this.#snowflakeClassName);
+
     if (isMoney) {
-      snowflake.addEventListener('click', () => {
-        clickMoneySnowflake.bind(this, snowflake);
+      snowflake.addEventListener('click', (e) => {
+        this.clickMoneySnowflake(e.target);
       });
+
+      snowflake.classList.add(this.#moneyClassName);
     }
-    snowflake.className = `${this.snowflakeClassName} ${
-      isMoney ? 'money' : ''
-    }`;
-    const containerWidth = this.container.clientWidth;
+
+    const containerWidth = this.#container.clientWidth;
     snowflake.style.left = `${Math.random() * containerWidth}px`;
     snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
     snowflake.innerText = isMoney
-      ? this.moneyEmoji
-      : this.snowflakeEmoji;
-    this.container.appendChild(snowflake);
+      ? this.#moneyEmoji
+      : this.#snowflakeEmoji;
+    this.#container.appendChild(snowflake);
   }
 
   clickMoneySnowflake(element) {
     DOMHelper.hideElements(element);
+    const containerWidth = this.#container.clientWidth;
+    element.style.left = `${Math.random() * containerWidth}px`;
     this.controller.changeMoney(this.#moneyEmojiValue);
     setTimeout(() => {
       DOMHelper.showElements(element);
@@ -540,7 +569,9 @@ class SnowGameEffect extends SceneEffect {
   }
 
   initEffect() {
-    GameController.instance.startGame(SNOWFLAKE_GAME);
+    GameController.instance.startGame(SNOWFLAKE_GAME, {
+      container: this.container,
+    });
   }
 }
 
