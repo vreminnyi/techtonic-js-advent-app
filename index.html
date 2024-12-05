@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JS Advent Postcard Game</title>
   <link rel="stylesheet" href="assets/styles/styles.css" />
+  <script src="assets/scripts/main.js" defer></script>
 </head>
 
 <body>
@@ -25,10 +26,9 @@
           <img src="assets/icons/kitchen.svg" alt="Kitchen" />
         </div>
       </div>
-      <div class="money"><span id="money">0</span> UAH</div>
+      <div class="money"><span id="money">0</span> грн.</div>
     </header>
     <div class="scene" id="scene">
-      <div id="snowflake-container"></div>
       <div class="smartphone hidden" id="smartphone">
         <div class="screen">
           <div class="todo-app">
@@ -45,9 +45,9 @@
     <footer>
       <div class="helper">
         <div class="avatar"></div>
-        <div class="dialog">Don't forget about Christmas Tree</div>
+        <div class="dialog">З наступаючим новим роком 🎅</div>
       </div>
-      <div class="smartphone-button hidden" id="smartphone-button">
+      <div class="smartphone-button" id="smartphone-button">
         <img src="assets/icons/smartphone.svg" alt="Smartphone" />
       </div>
     </footer>
@@ -62,7 +62,6 @@
       <button id="start-game" class="hidden">Почати гру</button>
     </div>
   </main>
-  <script src="assets/scripts/main.js"></script>
 </body>
 
 </html>
