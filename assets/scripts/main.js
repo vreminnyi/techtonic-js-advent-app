@@ -1,5 +1,6 @@
 // Variables
 const HIDDEN_CLASS = 'hidden';
+const INVISIBLE_CLASS = 'invisible';
 
 const TREE_SIZE = Symbol('TREE_SIZE');
 
@@ -7,6 +8,9 @@ const STREET_SCENE = Symbol('STREET_SCENE');
 const TREE_SCENE = Symbol('TREE_SCENE');
 const HOME_SCENE = Symbol('HOME_SCENE');
 const KITCHEN_SCENE = Symbol('KITCHEN_SCENE');
+
+const SNOWFLAKE_GAME = Symbol('SNOWFLAKE_GAME');
+const MONEY = Symbol('MONEY');
 
 // Classes
 class Encoder {
@@ -83,6 +87,14 @@ class DOMHelper {
 
   static showElements(...elements) {
     elements.forEach((el) => el.classList.remove(HIDDEN_CLASS));
+  }
+
+  static concealElements(...elements) {
+    elements.forEach((el) => el.classList.add(INVISIBLE_CLASS));
+  }
+
+  static revealElements(...elements) {
+    elements.forEach((el) => el.classList.remove(INVISIBLE_CLASS));
   }
 }
 
@@ -217,13 +229,128 @@ class Greeting {
 }
 
 class GameController {
-  static start() {
+  static #instance;
+  #games = {};
+
+  #money = 0;
+  #moneyContainer;
+
+  static get instance() {
+    if (!GameController.#instance) {
+      GameController.#instance = new GameController();
+    }
+
+    return GameController.#instance;
+  }
+
+  constructor() {
+    this.#money = Storage.get(MONEY);
+    this.#moneyContainer = document.getElementById('money');
+  }
+
+  start() {
+    this.#initGames();
     SceneController.instance.init(STREET_SCENE);
     SmartphoneController.instance.turnOn();
   }
 
-  static get treeSize() {
+  get treeSize() {
     return Storage.get(TREE_SIZE.toString()) || 0;
+  }
+
+  #initGames() {
+    Object.getOwnPropertySymbols(gameDict).forEach((key) => {
+      const { instance, options } = gameDict[key];
+      this.#games[key] = new instance(this, options);
+    });
+  }
+
+  startGame(game) {
+    if (!this.#games[game]) return;
+    return this.#games[game].init();
+  }
+
+  changeMoney(change) {
+    this.#money += change;
+    this.drawMoney();
+  }
+
+  drawMoney() {
+    this.#moneyContainer.innerText = money;
+  }
+}
+
+class Game {
+  constructor(controller, options) {
+    this.controller = controller;
+    this.options = options;
+  }
+
+  init() {
+    console.log('Game initializing...');
+  }
+}
+
+class SnowflakeGame extends Game {
+  #snowflakeEmoji = '❄️';
+  #moneyEmoji = '💸';
+  #moneyEmojiValue = 1;
+  #numberOfSnowflakes = 100;
+  #numberOfMoney = 5;
+  #snowflakeClassName = 'snowflake';
+
+  constructor() {
+    super();
+    this.#snowflakeEmoji =
+      this.options.snowflakeEmoji || this.#snowflakeEmoji;
+    this.#moneyEmoji = this.options.moneyEmoji || this.#moneyEmoji;
+    this.#moneyEmojiValue =
+      this.options.moneyEmojiValue || this.#moneyEmojiValue;
+    this.#numberOfSnowflakes =
+      this.options.numberOfSnowflakes || this.#numberOfSnowflakes;
+    this.#numberOfMoney =
+      this.options.numberOfMoney || this.#numberOfMoney;
+    this.#snowflakeClassName =
+      this.options.snowflakeClassName || this.#snowflakeClassName;
+  }
+
+  init() {
+    for (let i = 0; i < this.#numberOfSnowflakes; i++) {
+      setTimeout(() => {
+        this.createSnowflake(i);
+      }, i * 100);
+    }
+  }
+
+  createSnowflake(i) {
+    const step = Math.round(
+      this.#numberOfSnowflakes / this.#numberOfMoney
+    );
+    const isMoney = i % step === 0 && i !== 0;
+    const snowflake = document.createElement('div');
+    if (isMoney) {
+      snowflake.addEventListener('click', () => {
+        clickMoneySnowflake.bind(this, snowflake);
+      });
+    }
+    snowflake.className = `${this.snowflakeClassName} ${
+      isMoney ? 'money' : ''
+    }`;
+    const containerWidth = this.container.clientWidth;
+    snowflake.style.left = `${Math.random() * containerWidth}px`;
+    snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
+    snowflake.innerText = isMoney
+      ? this.moneyEmoji
+      : this.snowflakeEmoji;
+    this.container.appendChild(snowflake);
+  }
+
+  clickMoneySnowflake(element) {
+    DOMHelper.hideElements(element);
+    this.controller.changeMoney(this.#moneyEmojiValue);
+    setTimeout(() => {
+      DOMHelper.showElements(element);
+    }, 5000 + Math.random() * 1000);
   }
 }
 
@@ -297,7 +424,7 @@ class SceneController {
     this.#background.classList.add(sceneInstance.className);
 
     if ([TREE_SCENE, HOME_SCENE].includes(scene)) {
-      const sceneTreeClass = `${sceneInstance.className}-${GameController.treeSize}`;
+      const sceneTreeClass = `${sceneInstance.className}-${GameController.instance.treeSize}`;
       this.#sceneContainer.classList.add(sceneTreeClass);
       this.#background.classList.add(sceneTreeClass);
     }
@@ -321,7 +448,7 @@ class SceneController {
     if (this.#effects.has(effect)) return;
     this.#sceneContainer.prepend(effect.container);
     effect.initEffect();
-    DOMHelper.hideElements(effect.container);
+    DOMHelper.concealElements(effect.container);
     this.#effects.add(effect);
   }
 
@@ -382,11 +509,11 @@ class SceneEffect {
   container;
 
   on() {
-    DOMHelper.showElements(this.container);
+    DOMHelper.revealElements(this.container);
   }
 
   off() {
-    DOMHelper.hideElements(this.container);
+    DOMHelper.concealElements(this.container);
   }
 
   initEffect() {
@@ -396,12 +523,6 @@ class SceneEffect {
 
 class SnowGameEffect extends SceneEffect {
   static #instance;
-
-  snowflakeEmoji = '❄️';
-  moneyEmoji = '💸';
-  moneyEmojiValue = 1;
-  numberOfSnowflakes = 100;
-  snowflakeClassName = 'snowflake';
 
   static get instance() {
     if (!SnowGameEffect.#instance) {
@@ -419,27 +540,7 @@ class SnowGameEffect extends SceneEffect {
   }
 
   initEffect() {
-    for (let i = 0; i < this.numberOfSnowflakes; i++) {
-      this.createSnowflake(i);
-    }
-  }
-
-  createSnowflake(i) {
-    const isMoney = i % 20 === 0 && i !== 0;
-    const snowflake = document.createElement('div');
-    // if (isMoney) {
-    //   snowflake.onclick = clickMoneySnowflake.bind(this, snowflake);
-    // }
-    snowflake.className = `${this.snowflakeClassName} ${
-      isMoney ? 'money' : ''
-    }`;
-    const containerWidth = this.container.clientWidth;
-    snowflake.style.left = `${Math.random() * containerWidth}px`;
-    snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
-    snowflake.innerText = isMoney
-      ? this.moneyEmoji
-      : this.snowflakeEmoji;
-    this.container.appendChild(snowflake);
+    GameController.instance.startGame(SNOWFLAKE_GAME);
   }
 }
 
@@ -465,7 +566,20 @@ const sceneDict = {
   },
 };
 
+const gameDict = {
+  [SNOWFLAKE_GAME]: {
+    instance: SnowflakeGame,
+    options: {
+      snowflakeEmoji: '❄️',
+      moneyEmoji: '💸',
+      moneyEmojiValue: 1,
+      numberOfSnowflakes: 100,
+      snowflakeClassName: 'snowflake',
+    },
+  },
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   Greeting.instance.greet();
-  GameController.start();
+  GameController.instance.start();
 });
