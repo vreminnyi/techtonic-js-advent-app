@@ -316,18 +316,18 @@ class SnowflakeGame extends Game {
     super(controller, options);
 
     this.#snowflakeEmoji =
-      this.options.snowflakeEmoji || this.#snowflakeEmoji;
-    this.#moneyEmoji = this.options.moneyEmoji || this.#moneyEmoji;
+      this.options.snowflakeEmoji ?? this.#snowflakeEmoji;
+    this.#moneyEmoji = this.options.moneyEmoji ?? this.#moneyEmoji;
     this.#moneyEmojiValue =
-      this.options.moneyEmojiValue || this.#moneyEmojiValue;
+      this.options.moneyEmojiValue ?? this.#moneyEmojiValue;
     this.#numberOfSnowflakes =
-      this.options.numberOfSnowflakes || this.#numberOfSnowflakes;
+      this.options.numberOfSnowflakes ?? this.#numberOfSnowflakes;
     this.#numberOfMoney =
-      this.options.numberOfMoney || this.#numberOfMoney;
+      this.options.numberOfMoney ?? this.#numberOfMoney;
     this.#snowflakeClassName =
-      this.options.snowflakeClassName || this.#snowflakeClassName;
+      this.options.snowflakeClassName ?? this.#snowflakeClassName;
     this.#moneyClassName =
-      this.options.moneyClassName || this.#moneyClassName;
+      this.options.moneyClassName ?? this.#moneyClassName;
   }
 
   init(options) {
@@ -337,20 +337,32 @@ class SnowflakeGame extends Game {
 
     if (!this.#container) return;
 
-    for (let i = 0; i < this.#numberOfSnowflakes; i++) {
+    let moneyCount = this.#numberOfMoney;
+    const step = this.getStep();
+
+    for (let i = 0; i < this.getSnowflakeCount(); i++) {
       setTimeout(() => {
-        this.createSnowflake(i);
+        let isMoney = (i + 1) % step === 0;
+
+        if (step <= 1) {
+          isMoney = isMoney && moneyCount-- > 0;
+        }
+
+        this.createSnowflake(i, isMoney);
       }, i * 100);
     }
   }
 
   getStep() {
-    return Math.round(this.#numberOfSnowflakes / this.#numberOfMoney);
+    if (this.#numberOfSnowflakes < this.#numberOfMoney) return 1;
+    return Math.floor(this.#numberOfSnowflakes / this.#numberOfMoney);
   }
 
-  createSnowflake(i) {
-    const step = this.getStep();
-    const isMoney = i % step === 0 && i !== 0;
+  getSnowflakeCount() {
+    return Math.max(this.#numberOfSnowflakes, this.#numberOfMoney);
+  }
+
+  createSnowflake(i, isMoney) {
     const snowflake = document.createElement('div');
 
     snowflake.classList.add(this.#snowflakeClassName);
@@ -604,6 +616,7 @@ const gameDict = {
       snowflakeEmoji: '❄️',
       moneyEmoji: '💸',
       moneyEmojiValue: 1,
+      numberOfMoney: 10,
       numberOfSnowflakes: 100,
       snowflakeClassName: 'snowflake',
     },
