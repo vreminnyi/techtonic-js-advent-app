@@ -1,4 +1,4 @@
-// Variables
+// Змінні
 const HIDDEN_CLASS = 'hidden';
 const INVISIBLE_CLASS = 'invisible';
 
@@ -12,7 +12,7 @@ const KITCHEN_SCENE = Symbol('KITCHEN_SCENE');
 const SNOWFLAKE_GAME = Symbol('SNOWFLAKE_GAME');
 const MONEY = Symbol('MONEY');
 
-// Classes
+// Класи
 class Encoder {
   static encode(text) {
     if (typeof text !== 'string') {
@@ -167,7 +167,7 @@ class Greeting {
       copyButton.textContent = 'Зкопіювати';
 
       openButton.addEventListener('click', () => {
-        window.open(url.toString(), '_blank').focus();
+        window.location.href = url.toString();
       });
 
       copyButton.addEventListener('click', () => {
@@ -623,38 +623,18 @@ class Countdown {
 
   static #updateCountdown() {
     const now = new Date();
-    const nextNewYear = new Date(
-      now.getFullYear() + 1,
-      0,
-      1,
-      23,
-      59,
-      59
-    );
-    const nextCountdownStart = new Date(
-      nextNewYear.getFullYear() + 1,
-      0,
-      2
-    ); // 2 січня опівночі
-    const currentNewYear = new Date(
-      now.getFullYear(),
-      0,
-      1,
-      23,
-      59,
-      59
-    );
+    const nextNewYear = new Date(now.getFullYear() + 1, 0, 1);
 
-    let diff;
-    if (now > nextNewYear && now < nextCountdownStart) {
-      // Якщо зараз між новим роком і 2 січня, таймер показує нулі
+    let diff = nextNewYear - now;
+    const startOfDay = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
+    const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
+
+    if (startOfDay.getTime() === firstDayOfYear.getTime()) {
       diff = 0;
-    } else if (now < currentNewYear) {
-      // Якщо зараз до кінця року, відлік йде до найближчого нового року
-      diff = currentNewYear - now;
-    } else {
-      // В інших випадках (після 2 січня), відлік йде до наступного нового року
-      diff = nextNewYear - now;
     }
 
     const time = {
@@ -675,7 +655,7 @@ class Countdown {
   }
 }
 
-// Logic
+// Логіка
 const sceneDict = {
   [STREET_SCENE]: {
     name: 'street',
