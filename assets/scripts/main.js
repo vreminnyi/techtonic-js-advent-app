@@ -587,6 +587,94 @@ class SnowGameEffect extends SceneEffect {
   }
 }
 
+const today = new Date();
+
+class Countdown {
+  static #interval;
+  static #time = {};
+
+  static start(container) {
+    clearInterval(Countdown.#interval);
+    Object.keys(timeDict).forEach((unit) => {
+      const timeBlock = document.createElement('div');
+      timeBlock.className = 'time-block';
+
+      const timeValue = document.createElement('div');
+      timeValue.className = 'time';
+      timeValue.id = unit;
+      timeValue.textContent = '00';
+
+      const timeLabel = document.createElement('div');
+      timeLabel.className = 'label';
+      timeLabel.textContent = timeDict[unit];
+
+      timeBlock.appendChild(timeValue);
+      timeBlock.appendChild(timeLabel);
+
+      container.appendChild(timeBlock);
+      Countdown.#time[unit] = timeValue;
+    });
+    Countdown.#updateCountdown();
+    Countdown.#interval = setInterval(
+      Countdown.#updateCountdown,
+      1000
+    );
+  }
+
+  static #updateCountdown() {
+    const now = new Date();
+    const nextNewYear = new Date(
+      now.getFullYear() + 1,
+      0,
+      1,
+      23,
+      59,
+      59
+    );
+    const nextCountdownStart = new Date(
+      nextNewYear.getFullYear() + 1,
+      0,
+      2
+    ); // 2 січня опівночі
+    const currentNewYear = new Date(
+      now.getFullYear(),
+      0,
+      1,
+      23,
+      59,
+      59
+    );
+
+    let diff;
+    if (now > nextNewYear && now < nextCountdownStart) {
+      // Якщо зараз між новим роком і 2 січня, таймер показує нулі
+      diff = 0;
+    } else if (now < currentNewYear) {
+      // Якщо зараз до кінця року, відлік йде до найближчого нового року
+      diff = currentNewYear - now;
+    } else {
+      // В інших випадках (після 2 січня), відлік йде до наступного нового року
+      diff = nextNewYear - now;
+    }
+
+    const time = {
+      days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+      hours: Math.floor(
+        (diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      ),
+      minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
+      seconds: Math.floor((diff % (1000 * 60)) / 1000),
+    };
+
+    Object.keys(time).forEach((unit) => {
+      if (!Countdown.#time[unit]) return;
+      Countdown.#time[unit].textContent = time[unit]
+        .toString()
+        .padStart(2, '0');
+    });
+  }
+}
+
 // Logic
 const sceneDict = {
   [STREET_SCENE]: {
@@ -623,7 +711,15 @@ const gameDict = {
   },
 };
 
+const timeDict = {
+  days: 'дн.',
+  hours: 'год.',
+  minutes: 'хв.',
+  seconds: 'сек.',
+};
+
 document.addEventListener('DOMContentLoaded', () => {
   Greeting.instance.greet();
   GameController.instance.start();
+  Countdown.start(document.getElementById('countdown'));
 });

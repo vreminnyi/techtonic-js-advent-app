@@ -203,18 +203,50 @@ html {
   background-color: rgb(68 200 207 / 50%);
 }
 
-.game-container > header > .money {
+.game-container > header > .right {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.game-container > header > .right >  #countdown {
+  display: flex;
+  text-align: center;
+  padding: 10px;
+}
+
+.game-container > header > .right > #countdown .time-block {
+  padding: 0 .1rem;
+}
+
+.game-container > header > .right > #countdown .time {
+  font-size: 1.5rem;
+  margin: 5px 0;
+  padding: .1rem;
+  background-color: rgb(86 199 206);
+  border-radius: 5px;
+  color: #fff;
+}
+
+.game-container > header > .right > #countdown .label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #000;
+}
+
+.game-container > header > .right > .money {
   background-color: rgb(68 200 207);
   color: #fff;
   border-radius: 5px;
   padding: 1rem;
+  margin-left: 1rem;
 }
 
-.game-container.scene-home > header > .money {
+.game-container.scene-home > header > .right > .money {
   background-color: rgb(243 176 58);
 }
 
-.game-container.scene-kitchen > header > .money {
+.game-container.scene-kitchen > header > .right > .money {
   background-color: rgb(255 96 111);
 }
 
@@ -458,4 +490,20 @@ html {
 
 .invisible {
   visibility: hidden !important;
+}
+
+.no-select {
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+  -webkit-user-select: none;
+  /* Safari */
+  -khtml-user-select: none;
+  /* Konqueror HTML */
+  -moz-user-select: none;
+  /* Old versions of Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  user-select: none;
+  /* Non-prefixed version, currently
+                                supported by Chrome, Edge, Opera and Firefox */
 }
