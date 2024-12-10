@@ -15,8 +15,8 @@ const MONEY = Symbol('MONEY');
 // Класи
 class Encoder {
   static encode(text) {
-    if (typeof text !== 'string') {
-      throw new TypeError('Input must be a string');
+    if (!['string', 'number', 'boolean'].includes(typeof text)) {
+      throw new TypeError('Input must be a string/number/boolean');
     }
     return btoa(encodeURIComponent(text));
   }
@@ -111,7 +111,7 @@ class Greeting {
 
   #hash = '';
   title = '';
-  text = 'Happy Holidays!';
+  text = 'Веселих свят!';
 
   static get instance() {
     if (!Greeting.#instance) {
@@ -241,6 +241,7 @@ class GameController {
 
   #money = 0;
   #moneyContainer;
+  #dialog;
 
   static get instance() {
     if (!GameController.#instance) {
@@ -254,18 +255,25 @@ class GameController {
     this.#money = Number(
       Storage.get(MONEY.toString()) ?? this.#money
     );
-    this.#moneyContainer = document.getElementById('money');
   }
 
-  start() {
+  start(options) {
+    this.#moneyContainer = options.moneyText;
+    this.#dialog = new HelperDialog({
+      dialogText: options.helperDialog,
+    });
     this.#initGames();
-    SceneController.instance.init(STREET_SCENE);
+    SceneController.instance.init(options.scene);
     SmartphoneController.instance.turnOn();
     this.drawMoney();
   }
 
   get treeSize() {
     return Storage.get(TREE_SIZE.toString()) || 0;
+  }
+
+  showDialog(dialog) {
+    this.#dialog.showDialog(dialog);
   }
 
   #initGames() {
@@ -277,7 +285,14 @@ class GameController {
 
   startGame(game, options) {
     if (!this.#games[game]) return;
-    return this.#games[game].init(options);
+    return this.#games[game].on(options);
+  }
+
+  stopGames() {
+    Object.getOwnPropertySymbols(this.#games).forEach((key) => {
+      const game = this.#games[key];
+      game.off();
+    });
   }
 
   changeMoney(change) {
@@ -292,96 +307,87 @@ class GameController {
 }
 
 class Game {
+  isActive = false;
+
   constructor(controller, options) {
     this.controller = controller;
     this.options = options;
   }
 
-  init() {
-    console.log('Game initializing...');
+  on() {
+    this.isActive = true;
+  }
+
+  off() {
+    this.isActive = false;
   }
 }
 
 class SnowflakeGame extends Game {
-  #snowflakeEmoji = '❄️';
   #moneyEmoji = '💸';
   #moneyEmojiValue = 1;
-  #numberOfSnowflakes = 100;
   #numberOfMoney = 5;
+  #speed = 1000;
   #snowflakeClassName = 'snowflake';
   #moneyClassName = 'money';
+  #snowflakes = [];
   #container;
+  #interval;
 
   constructor(controller, options) {
     super(controller, options);
 
-    this.#snowflakeEmoji =
-      this.options.snowflakeEmoji ?? this.#snowflakeEmoji;
     this.#moneyEmoji = this.options.moneyEmoji ?? this.#moneyEmoji;
     this.#moneyEmojiValue =
       this.options.moneyEmojiValue ?? this.#moneyEmojiValue;
-    this.#numberOfSnowflakes =
-      this.options.numberOfSnowflakes ?? this.#numberOfSnowflakes;
     this.#numberOfMoney =
       this.options.numberOfMoney ?? this.#numberOfMoney;
     this.#snowflakeClassName =
       this.options.snowflakeClassName ?? this.#snowflakeClassName;
     this.#moneyClassName =
       this.options.moneyClassName ?? this.#moneyClassName;
+    this.#container = this.options.container ?? this.#container;
+    this.#speed = this.options.speed ?? this.#speed;
   }
 
-  init(options) {
-    this.#container =
-      options.container ||
-      document.getElementById('snowflake-effect-container');
+  on() {
+    super.on();
 
     if (!this.#container) return;
+    this.#snowflakes = [];
 
-    let moneyCount = this.#numberOfMoney;
-    const step = this.getStep();
-
-    for (let i = 0; i < this.getSnowflakeCount(); i++) {
-      setTimeout(() => {
-        let isMoney = (i + 1) % step === 0;
-
-        if (step <= 1) {
-          isMoney = isMoney && moneyCount-- > 0;
-        }
-
-        this.createSnowflake(i, isMoney);
-      }, i * 100);
-    }
+    this.#interval = setInterval(() => {
+      if (this.#numberOfMoney > this.#snowflakes.length) {
+        this.createMoneySnowflake();
+      }
+    }, this.#speed);
   }
 
-  getStep() {
-    if (this.#numberOfSnowflakes < this.#numberOfMoney) return 1;
-    return Math.floor(this.#numberOfSnowflakes / this.#numberOfMoney);
+  off() {
+    super.off();
+    clearInterval(this.#interval);
+    DOMHelper.removeElements(...this.#snowflakes);
+    this.#snowflakes = [];
+    return true;
   }
 
-  getSnowflakeCount() {
-    return Math.max(this.#numberOfSnowflakes, this.#numberOfMoney);
-  }
-
-  createSnowflake(i, isMoney) {
+  createMoneySnowflake() {
     const snowflake = document.createElement('div');
 
     snowflake.classList.add(this.#snowflakeClassName);
+    snowflake.classList.add(this.#moneyClassName);
 
-    if (isMoney) {
-      snowflake.addEventListener('click', (e) => {
-        this.clickMoneySnowflake(e.target);
-      });
-
-      snowflake.classList.add(this.#moneyClassName);
-    }
+    snowflake.addEventListener('click', (e) => {
+      this.clickMoneySnowflake(e.target);
+    });
 
     const containerWidth = this.#container.clientWidth;
-    snowflake.style.left = `${Math.random() * containerWidth}px`;
+    const shift = Math.min(Math.random(), 0.9);
+    snowflake.style.left = `${shift * containerWidth}px`;
     snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
-    snowflake.innerText = isMoney
-      ? this.#moneyEmoji
-      : this.#snowflakeEmoji;
+    snowflake.innerText = this.#moneyEmoji;
     this.#container.appendChild(snowflake);
+    this.#snowflakes.push(snowflake);
   }
 
   clickMoneySnowflake(element) {
@@ -390,7 +396,7 @@ class SnowflakeGame extends Game {
     element.style.left = `${Math.random() * containerWidth}px`;
     this.controller.changeMoney(this.#moneyEmojiValue);
     setTimeout(() => {
-      DOMHelper.showElements(element);
+      if (element) DOMHelper.showElements(element);
     }, 5000 + Math.random() * 1000);
   }
 }
@@ -403,6 +409,8 @@ class SceneController {
   #sceneContainer;
   #gameContainer;
   #background;
+
+  #sceneDialogTimeout;
 
   static #instance;
 
@@ -420,6 +428,10 @@ class SceneController {
     this.#background = document.getElementById('background');
   }
 
+  get currentScene() {
+    return this.#currentScene;
+  }
+
   init(scene) {
     this.loadScenes();
     this.change(scene);
@@ -433,6 +445,7 @@ class SceneController {
       // Init buttons
       const buttonId = `${sceneData.name}-button`;
       const buttonElement = document.getElementById(buttonId);
+
       buttonElement.addEventListener('click', () => {
         SceneController.instance.change(key);
       });
@@ -444,31 +457,23 @@ class SceneController {
   }
 
   change(scene) {
-    if (!this.#scenes[scene]) return;
-
     const sceneInstance = this.#scenes[scene];
 
+    if (!sceneInstance) return;
+
     if (this.#currentScene) {
-      this.#sceneContainer.classList.remove(
-        this.#currentScene.className
-      );
-      this.#gameContainer.classList.remove(
-        this.#currentScene.className
-      );
-      this.#background.classList.remove(this.#currentScene.className);
+      const currentClass = this.#currentScene.className;
+      this.#sceneContainer.classList.remove(currentClass);
+      this.#gameContainer.classList.remove(currentClass);
+      this.#background.classList.remove(currentClass);
     }
 
     this.#currentScene = sceneInstance;
+    const currentClass = sceneInstance.className;
 
-    this.#sceneContainer.classList.add(sceneInstance.className);
-    this.#gameContainer.classList.add(sceneInstance.className);
-    this.#background.classList.add(sceneInstance.className);
-
-    if ([TREE_SCENE, HOME_SCENE].includes(scene)) {
-      const sceneTreeClass = `${sceneInstance.className}-${GameController.instance.treeSize}`;
-      this.#sceneContainer.classList.add(sceneTreeClass);
-      this.#background.classList.add(sceneTreeClass);
-    }
+    this.#sceneContainer.classList.add(currentClass);
+    this.#gameContainer.classList.add(currentClass);
+    this.#background.classList.add(currentClass);
 
     Object.getOwnPropertySymbols(this.#scenes).forEach((key) => {
       const scene = this.#scenes[key];
@@ -482,33 +487,73 @@ class SceneController {
       }
     });
 
-    this.applyEffects(sceneInstance.effects);
+    const options = {
+      sceneContainer: this.#sceneContainer,
+      background: this.#background,
+    };
+
+    sceneInstance.applyEffects(options);
+    sceneInstance.gamesOn(options);
+    setTimeout(() => this.showSceneDialog(), 1000);
+  }
+
+  showSceneDialog() {
+    clearTimeout(this.#sceneDialogTimeout);
+    const { dialogs = [] } = this.#currentScene;
+    const randomIndex = Math.floor(Math.random() * dialogs.length);
+    GameController.instance.showDialog(dialogs[randomIndex]);
+    this.#sceneDialogTimeout = setTimeout(
+      () => this.showSceneDialog(),
+      30000
+    );
   }
 
   addEffect(effect) {
     if (this.#effects.has(effect)) return;
-    this.#sceneContainer.prepend(effect.container);
+
+    if (effect.container) {
+      this.#sceneContainer.prepend(effect.container);
+    }
+
     effect.initEffect();
-    DOMHelper.concealElements(effect.container);
+
+    if (effect.container) {
+      DOMHelper.concealElements(effect.container);
+    }
+
     this.#effects.add(effect);
   }
 
-  applyEffects(effects = []) {
+  applyEffects(effects = [], opts) {
     this.#effects.forEach((effect) => {
-      effect.off();
+      effect.off(opts);
     });
+
     effects.forEach((effect) => {
-      effect.on();
+      effect.on(opts);
     });
   }
 }
 
 class Scene {
-  constructor({ name, buttons, effects }) {
+  constructor({ name, buttons, effects, games, dialogs }) {
     this.name = name;
     this.buttons = buttons;
     this.className = `scene-${name}`;
     this.effects = effects;
+    this.games = games;
+    this.dialogs = dialogs;
+  }
+
+  applyEffects(opts) {
+    return SceneController.instance.applyEffects(this.effects, opts);
+  }
+
+  gamesOn(opts) {
+    GameController.instance.stopGames();
+    return this.games.forEach((game) =>
+      GameController.instance.startGame(game, opts)
+    );
   }
 }
 
@@ -547,32 +592,42 @@ class SmartphoneController {
 }
 
 class SceneEffect {
+  isActive = false;
   container;
 
   on() {
+    this.isActive = true;
     DOMHelper.revealElements(this.container);
   }
 
   off() {
+    this.isActive = false;
     DOMHelper.concealElements(this.container);
   }
 
   initEffect() {
-    console.log('Init scene effect');
+    console.log(`Init ${this.constructor.name}`);
   }
 }
 
-class SnowGameEffect extends SceneEffect {
+class SnowEffect extends SceneEffect {
   static #instance;
+  #numberOfSnowflakes = 100;
+  #snowflakeClassName = 'snowflake';
+  #snowflakeEmoji = '❄️';
 
   static get instance() {
-    if (!SnowGameEffect.#instance) {
-      const effect = new SnowGameEffect();
+    if (!SnowEffect.#instance) {
+      const effect = new SnowEffect();
       effect.createContainer();
-      SnowGameEffect.#instance = effect;
+      SnowEffect.#instance = effect;
     }
 
-    return SnowGameEffect.#instance;
+    return SnowEffect.#instance;
+  }
+
+  get snowflakeClass() {
+    return this.#snowflakeClassName;
   }
 
   createContainer() {
@@ -581,13 +636,49 @@ class SnowGameEffect extends SceneEffect {
   }
 
   initEffect() {
-    GameController.instance.startGame(SNOWFLAKE_GAME, {
-      container: this.container,
-    });
+    for (let i = 0; i < this.#numberOfSnowflakes; i++) {
+      setTimeout(this.createSnowflake.bind(this), i * 100);
+    }
+  }
+
+  createSnowflake() {
+    const snowflake = document.createElement('div');
+
+    snowflake.classList.add(this.#snowflakeClassName);
+    const containerWidth = this.container.clientWidth;
+    snowflake.style.left = `${Math.random() * containerWidth}px`;
+    snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
+    snowflake.innerText = this.#snowflakeEmoji;
+    this.container.appendChild(snowflake);
   }
 }
 
-const today = new Date();
+class ChristmasTreeEffect extends SceneEffect {
+  static #instance;
+
+  static get instance() {
+    if (!ChristmasTreeEffect.#instance) {
+      const effect = new ChristmasTreeEffect();
+      ChristmasTreeEffect.#instance = effect;
+    }
+
+    return ChristmasTreeEffect.#instance;
+  }
+
+  on(opts) {
+    this.isActive = true;
+    const sceneTreeClass = `tree-${GameController.instance.treeSize}`;
+    opts.sceneContainer.classList.add(sceneTreeClass);
+    opts.background.classList.add(sceneTreeClass);
+  }
+
+  off(opts) {
+    this.isActive = false;
+    const sceneTreeClass = `tree-${GameController.instance.treeSize}`;
+    opts.sceneContainer.classList.remove(sceneTreeClass);
+    opts.background.classList.remove(sceneTreeClass);
+  }
+}
 
 class Countdown {
   static #interval;
@@ -655,25 +746,153 @@ class Countdown {
   }
 }
 
+class HelperDialog {
+  #charIndex = 0;
+  #typeTimeout;
+
+  constructor(options) {
+    this.dialogText = options.dialogText;
+  }
+
+  #typeText(content) {
+    if (this.#charIndex >= content.length) return;
+
+    this.dialogText.textContent += content.charAt(this.#charIndex);
+    this.#charIndex++;
+    this.#typeTimeout = setTimeout(() => this.#typeText(content), 50);
+  }
+
+  showDialog(dialog) {
+    clearTimeout(this.#typeTimeout);
+    this.dialogText.textContent = '';
+    this.#charIndex = 0;
+    if (dialog.type === 'text') {
+      this.#typeText(dialog.content);
+    } else if (dialog.type === 'question') {
+      this.#typeText(dialog.content);
+    }
+  }
+}
+
+class Dialog {
+  constructor(content, options = {}) {
+    this.content = content;
+    this.type = options.type ?? 'text';
+    this.options = options;
+  }
+
+  get() {
+    if (this.type === 'text') return this.getText();
+  }
+
+  getText() {
+    return this.content;
+  }
+}
+
 // Логіка
 const sceneDict = {
   [STREET_SCENE]: {
     name: 'street',
     buttons: [TREE_SCENE, HOME_SCENE],
-    effects: [SnowGameEffect.instance],
+    effects: [SnowEffect.instance],
+    games: [SNOWFLAKE_GAME],
+    dialogs: [
+      new Dialog('З наступаючим новим роком 🎅'),
+      new Dialog(
+        'Чому сніговик завжди у гарному настрої? Бо він живе у моменті й не хвилюється про те, що може розтанути!'
+      ),
+      new Dialog(
+        'Хочеш пограти в сніжки? Сніг сьогодні саме той, що треба!'
+      ),
+      new Dialog(
+        'Відчуй свіжий зимовий вітер і запах ялинки у повітрі.'
+      ),
+      new Dialog(
+        'Сніжинки танцюють у повітрі, запрошуючи нас до казкового світу.'
+      ),
+      new Dialog(
+        'На вулиці так холодно, що я тільки що бачив, як сніжинка шепнула іншій: "Тримайся, ми це переживемо!"'
+      ),
+      new Dialog('Нехай цей рік буде для тебе особливим! ✨'),
+      new Dialog('Зима - це час чудес! ⛄'),
+    ],
   },
   [TREE_SCENE]: {
     name: 'tree',
     buttons: [STREET_SCENE, HOME_SCENE],
-    effects: [SnowGameEffect.instance],
+    effects: [SnowEffect.instance, ChristmasTreeEffect.instance],
+    games: [],
+    dialogs: [
+      new Dialog(
+        'Чуєш, як тріщать гілочки на ялинці? Це від морозу.'
+      ),
+      new Dialog('Мені подобається запах свіжого снігу та хвої.'),
+      new Dialog(
+        'Відчуй свіжий зимовий вітер і запах ялинки у повітрі.'
+      ),
+      new Dialog(
+        'Задній двір перетворився на справжню зимову казку. Давайте зробимо сніговика!'
+      ),
+      new Dialog(
+        'Бажаю тобі щасливого Нового року та веселих свят! 🎄'
+      ),
+    ],
   },
   [HOME_SCENE]: {
     name: 'home',
     buttons: [TREE_SCENE, STREET_SCENE, KITCHEN_SCENE],
+    effects: [ChristmasTreeEffect.instance],
+    games: [],
+    dialogs: [
+      new Dialog(
+        'Час зібратися разом, щоб святкувати та обмінюватися подарунками!'
+      ),
+      new Dialog(
+        'Я попросив Санту принести мені гарний настрій на Різдво. А він відповів: "Немає проблем, просто сам собі подаруй вихідний!"'
+      ),
+      new Dialog(
+        'У цьому теплому куточку святкової зали кожен знайде місце для себе.'
+      ),
+      new Dialog(
+        'Підняти келихи за святковий настрій і за те, щоб всі мрії здійснилися.'
+      ),
+      new Dialog(
+        'У гостинній залі завжди панує атмосфера радості та сімейного затишку.'
+      ),
+      new Dialog(
+        'Що зробити, якщо ти не відчуваєш святкової атмосфери? Зʼїж мандаринку – це завжди працює!'
+      ),
+      new Dialog(
+        'Смачний запах ялинки і печива наповнює весь будинок.'
+      ),
+      new Dialog(
+        'Подивися, який гарний новорічний стіл! Скільки смаколиків!'
+      ),
+    ],
   },
   [KITCHEN_SCENE]: {
     name: 'kitchen',
     buttons: [HOME_SCENE],
+    games: [],
+    dialogs: [
+      new Dialog(
+        'Запах свіжоспечених пирогів та глінтвейну наповнює дім.'
+      ),
+      new Dialog(
+        'Час прикрашати імбирні пряники та готувати святкові ласощі!'
+      ),
+      new Dialog(
+        'Найкращі святкові вечори починаються з дружньої кухні.'
+      ),
+      new Dialog(
+        'Не забудьте залишити трохи печива та молока для Санти!'
+      ),
+      new Dialog(
+        'Який смачний аромат випічки! Хотілося б спробувати!'
+      ),
+      new Dialog('На кухні так затишно і тепло.'),
+    ],
   },
 };
 
@@ -681,12 +900,12 @@ const gameDict = {
   [SNOWFLAKE_GAME]: {
     instance: SnowflakeGame,
     options: {
-      snowflakeEmoji: '❄️',
       moneyEmoji: '💸',
       moneyEmojiValue: 1,
       numberOfMoney: 10,
-      numberOfSnowflakes: 100,
-      snowflakeClassName: 'snowflake',
+      speed: 1000,
+      snowflakeClassName: SnowEffect.instance.snowflakeClass,
+      container: SnowEffect.instance.container,
     },
   },
 };
@@ -699,7 +918,13 @@ const timeDict = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+  const gameOptions = {
+    scene: STREET_SCENE,
+    moneyText: document.getElementById('money'),
+    helperDialog: document.getElementById('helper-dialog'),
+  };
+
   Greeting.instance.greet();
-  GameController.instance.start();
+  GameController.instance.start(gameOptions);
   Countdown.start(document.getElementById('countdown'));
 });

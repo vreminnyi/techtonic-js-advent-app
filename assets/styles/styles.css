@@ -31,36 +31,64 @@ html {
   background-image: url("../images/scene-tree.png");
 }
 
-.background.scene-tree-1 {
+.background.scene-tree.tree-1 {
   background-image: url("../images/scene-tree-1.png");
 }
 
-.background.scene-tree-2 {
+.background.scene-tree.tree-2 {
   background-image: url("../images/scene-tree-2.png");
 }
 
-.background.scene-tree-3 {
+.background.scene-tree.tree-3 {
   background-image: url("../images/scene-tree-3.png");
 }
 
-.background.scene-tree-4 {
+.background.scene-tree.tree-4 {
   background-image: url("../images/scene-tree-4.png");
 }
 
-.background.scene-tree-5 {
+.background.scene-tree.tree-5 {
   background-image: url("../images/scene-tree-5.png");
 }
 
-.background.scene-tree-6 {
+.background.scene-tree.tree-6 {
   background-image: url("../images/scene-tree-6.png");
 }
 
-.background.scene-tree-7 {
+.background.scene-tree.tree-7 {
   background-image: url("../images/scene-tree-7.png");
 }
 
 .background.scene-home {
   background-image: url("../images/scene-home.png");
+}
+
+.background.scene-home.tree-1 {
+  background-image: url("../images/scene-home-1.png");
+}
+
+.background.scene-home.tree-2 {
+  background-image: url("../images/scene-home-2.png");
+}
+
+.background.scene-home.tree-3 {
+  background-image: url("../images/scene-home-3.png");
+}
+
+.background.scene-home.tree-4 {
+  background-image: url("../images/scene-home-4.png");
+}
+
+.background.scene-home.tree-5 {
+  background-image: url("../images/scene-home-5.png");
+}
+
+.background.scene-home.tree-6 {
+  background-image: url("../images/scene-home-6.png");
+}
+
+.background.scene-home.tree-7 {
+  background-image: url("../images/scene-home-7.png");
 }
 
 .background.scene-kitchen {
@@ -228,6 +256,14 @@ html {
   color: #fff;
 }
 
+.game-container.scene-home > header > .right > #countdown .time {
+  background-color: rgb(243 176 58);
+}
+
+.game-container.scene-kitchen > header > .right > #countdown .time {
+  background-color: rgb(255 96 111);
+}
+
 .game-container > header > .right > #countdown .label {
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -311,31 +347,31 @@ html {
   background-image: url("../images/scene-tree.png");
 }
 
-.game-container > .scene.scene-tree-1 {
+.game-container > .scene.scene-tree.tree-1 {
   background-image: url("../images/scene-tree-1.png");
 }
 
-.game-container > .scene.scene-tree-2 {
+.game-container > .scene.scene-tree.tree-2 {
   background-image: url("../images/scene-tree-2.png");
 }
 
-.game-container > .scene.scene-tree-3 {
+.game-container > .scene.scene-tree.tree-3 {
   background-image: url("../images/scene-tree-3.png");
 }
 
-.game-container > .scene.scene-tree-4 {
+.game-container > .scene.scene-tree.tree-4 {
   background-image: url("../images/scene-tree-4.png");
 }
 
-.game-container > .scene.scene-tree-5 {
+.game-container > .scene.scene-tree.tree-5 {
   background-image: url("../images/scene-tree-5.png");
 }
 
-.game-container > .scene.scene-tree-6 {
+.game-container > .scene.scene-tree.tree-6 {
   background-image: url("../images/scene-tree-6.png");
 }
 
-.game-container > .scene.scene-tree-7 {
+.game-container > .scene.scene-tree.tree-7 {
   background-image: url("../images/scene-tree-7.png");
 }
 
@@ -343,31 +379,31 @@ html {
   background-image: url("../images/scene-home.png");
 }
 
-.game-container > .scene.scene-home-1 {
+.game-container > .scene.scene-home.tree-1 {
   background-image: url("../images/scene-home-1.png");
 }
 
-.game-container > .scene.scene-home-2 {
+.game-container > .scene.scene-home.tree-2 {
   background-image: url("../images/scene-home-2.png");
 }
 
-.game-container > .scene.scene-home-3 {
+.game-container > .scene.scene-home.tree-3 {
   background-image: url("../images/scene-home-3.png");
 }
 
-.game-container > .scene.scene-home-4 {
+.game-container > .scene.scene-home.tree-4 {
   background-image: url("../images/scene-home-4.png");
 }
 
-.game-container > .scene.scene-home-5 {
+.game-container > .scene.scene-home.tree-5 {
   background-image: url("../images/scene-home-5.png");
 }
 
-.game-container > .scene.scene-home-6 {
+.game-container > .scene.scene-home.tree-6 {
   background-image: url("../images/scene-home-6.png");
 }
 
-.game-container > .scene.scene-home-7 {
+.game-container > .scene.scene-home.tree-7 {
   background-image: url("../images/scene-home-7.png");
 }
 
@@ -406,7 +442,7 @@ html {
   border: 1px solid #8099b5;
 }
 
-.game-container > footer > .helper > .dialog {
+.game-container > footer > .helper > .dialog-box {
   flex: 1;
   padding: 0.5rem 1rem;
   border-inline: 1rem solid #0000;
@@ -421,12 +457,16 @@ html {
   box-shadow: 1px 1px black;
 }
 
-.game-container.scene-home > footer > .helper > .dialog {
+.game-container.scene-home > footer > .helper > .dialog-box {
   background: linear-gradient(135deg, #da5330, #fcc05f) border-box;
 }
 
-.game-container.scene-kitchen > footer > .helper > .dialog {
+.game-container.scene-kitchen > footer > .helper > .dialog-box {
   background: linear-gradient(135deg, #c1b8b5, #f86572) border-box;
+}
+
+.game-container > footer > .helper > .dialog-box > .dialog-text {
+  line-height: 1.5rem;
 }
 
 .game-container > footer > .smartphone-button {
