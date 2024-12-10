@@ -422,6 +422,19 @@ html {
   padding: 1rem;
   font-size: 1rem;
   font-weight: bold;
+  position: relative;
+  z-index: 1;
+}
+
+.game-container > footer:before { 
+  content: ""; 
+  position: absolute; 
+  top: -6.9rem; 
+  left: 0; 
+  right: 0; 
+  height: 7rem; 
+  background: linear-gradient(to bottom, rgba(231, 248, 244, 0), rgba(231, 248, 244, 1)); 
+  pointer-events: none;
 }
 
 .game-container > footer > .helper {
