@@ -95,10 +95,6 @@ html {
   background-image: url("../images/scene-kitchen.png");
 }
 
-.background.scene-smartphone {
-  background-image: url("../images/scene-smartphone.png");
-}
-
 .greeting-card-overlay {
   position: fixed;
   top: 0;
@@ -411,10 +407,6 @@ html {
   background-image: url("../images/scene-kitchen.png");
 }
 
-.game-container > .scene.scene-smartphone {
-  background-image: url("../images/scene-smartphone.png");
-}
-
 .game-container > footer {
   display: flex;
   justify-content: space-between;
@@ -426,7 +418,8 @@ html {
   z-index: 1;
 }
 
-.game-container > footer:before { 
+.game-container.scene-street > footer:before,
+.game-container.scene-tree > footer:before { 
   content: ""; 
   position: absolute; 
   top: -6.9rem; 
