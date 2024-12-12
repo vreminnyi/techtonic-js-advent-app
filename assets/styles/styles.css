@@ -32,6 +32,10 @@ html {
   background-image: url("../images/scene-tree.png");
 }
 
+.background.scene-tree.tree-0 {
+  background-image: url("../images/scene-tree-0.png");
+}
+
 .background.scene-tree.tree-1 {
   background-image: url("../images/scene-tree-1.png");
 }
@@ -62,6 +66,10 @@ html {
 
 .background.scene-home {
   background-image: url("../images/scene-home.png");
+}
+
+.background.scene-home.tree-0 {
+  background-image: url("../images/scene-home-0.png");
 }
 
 .background.scene-home.tree-1 {
@@ -282,6 +290,14 @@ html {
   text-align: center;
 }
 
+.game-container > header > .right > .money #money {
+  max-width: 3rem;
+  overflow: hidden;
+  display: inline-block;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
 .game-container.scene-home > header > .right > .money {
   background-color: rgb(243 176 58);
 }
@@ -351,6 +367,10 @@ html {
   background-image: url("../images/scene-tree.png");
 }
 
+.game-container > .scene.scene-tree.tree-0 {
+  background-image: url("../images/scene-tree-0.png");
+}
+
 .game-container > .scene.scene-tree.tree-1 {
   background-image: url("../images/scene-tree-1.png");
 }
@@ -381,6 +401,10 @@ html {
 
 .game-container > .scene.scene-home {
   background-image: url("../images/scene-home.png");
+}
+
+.game-container > .scene.scene-home.tree-0 {
+  background-image: url("../images/scene-home-0.png");
 }
 
 .game-container > .scene.scene-home.tree-1 {
