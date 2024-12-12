@@ -9,11 +9,13 @@ html {
   font-size: 16px;
   font-family: "Courier New", Courier, monospace;
   position: relative;
+  height: 100%;
 }
 
 .background {
   width: 100%;
   height: 100vh;
+  height: -webkit-fill-available;
   top: 0;
   left: 0;
   position: absolute;
@@ -181,6 +183,7 @@ html {
   min-width: 360px;
   max-width: 430px;
   height: 100vh;
+  height: -webkit-fill-available;
   background-color: #eafbf5;
   box-shadow: 0 0 0 1px #000;
   margin: 0 auto;
@@ -206,7 +209,7 @@ html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: .5rem;
+  padding: 0.5rem;
   font-weight: bold;
 }
 
@@ -285,8 +288,8 @@ html {
   background-color: rgb(68 200 207);
   color: #fff;
   border-radius: 5px;
-  padding: 1rem .5rem;
-  margin-left: 1rem;
+  padding: 1rem 0.5rem;
+  margin-left: .5rem;
   text-align: center;
 }
 
@@ -443,7 +446,7 @@ html {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  padding: .5rem;
+  padding: 0.5rem;
   font-weight: bold;
   position: relative;
   z-index: 1;
@@ -510,7 +513,7 @@ html {
 
 .game-container > footer > .helper > .dialog-box > .dialog-text {
   line-height: 1.2rem;
-  font-size: .8rem;
+  font-size: 0.8rem;
 }
 
 .snowflake {
@@ -553,17 +556,17 @@ html {
 }
 
 #grow-tree-game-container .grow-tree-game-button {
-  padding: .5rem;
+  padding: 0.5rem;
   background-color: #50c6cd;
   color: #ebfbf5;
   border-radius: 10px;
   border-color: #007a82;
-  margin-bottom: .5rem;
+  margin-bottom: 0.5rem;
   font-size: 1.2em;
 }
 
 #grow-tree-game-container .grow-tree-statistic {
-  padding: .5rem;
+  padding: 0.5rem;
   background-color: #50c6cd;
   color: #ebfbf5;
   border-radius: 10px;
@@ -607,20 +610,32 @@ html {
 
 /* for general stylings (both, mobile && desktop) */
 @media screen and (min-width: 320px) {
-
-} 
+}
 /* for only styles between 320px and 768px (most mobile devices) */
-@media screen and (max-width: 767px) {}
+@media screen and (max-width: 767px) {
+}
 
 /* general desktop && tablet styles if needed */
-@media screen and (min-width: 768px) {}
+@media screen and (min-width: 768px) {
+}
 
 /* only tablet styles */
-@media screen and (min-width: 768px) and (max-width: 1024px) {}
+@media screen and (min-width: 768px) and (max-width: 1024px) {
+  body,
+  html {
+    font-size: 22px;
+  }
+
+  .game-container {
+    min-width: 430px;
+    max-width: 680px;
+  }
+}
 
 /* start with desktop styling */
 @media screen and (min-width: 1025px) {
-  body, html {
+  body,
+  html {
     font-size: 22px;
   }
 
