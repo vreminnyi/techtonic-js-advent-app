@@ -211,6 +211,24 @@ html {
   align-items: center;
   padding: 0.5rem;
   font-weight: bold;
+  position: relative;
+}
+
+.game-container.scene-street > header:after,
+.game-container.scene-tree > header:after {
+  content: "";
+  position: absolute;
+  bottom: calc(-10vh + 1px);
+  left: 0;
+  right: 0;
+  height: 10vh;
+  background: linear-gradient(
+    to bottom,
+    rgba(235, 251, 245, 1),
+    rgba(235, 251, 245, 0)
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 
 .game-container > header > .buttons {
@@ -332,7 +350,7 @@ html {
   padding: 20px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   background: white;
-  z-index: 2;
+  z-index: 3;
 }
 
 .screen {
@@ -456,14 +474,14 @@ html {
 .game-container.scene-tree > footer:before {
   content: "";
   position: absolute;
-  top: calc(-7rem + 1px);
+  top: calc(-10vh + 1px);
   left: 0;
   right: 0;
-  height: 7rem;
+  height: 10vh;
   background: linear-gradient(
     to bottom,
-    rgba(231, 248, 244, 0),
-    rgba(231, 248, 244, 1)
+    rgba(235, 251, 245, 0),
+    rgba(235, 251, 245, 1)
   );
   pointer-events: none;
 }
@@ -514,6 +532,30 @@ html {
 .game-container > footer > .helper > .dialog-box > .dialog-text {
   line-height: 1.2rem;
   font-size: 0.8rem;
+}
+
+#dialog-quiz-container > div {
+  display: flex;
+}
+
+#dialog-quiz-container > div > button {
+  margin: .1rem;
+  padding: .5rem .2rem;
+  border-radius: 5px;
+  border: 1px solid #000;
+  background-color: rgba(0, 0, 0, .3);
+  color: #fff;
+  cursor: pointer;
+}
+
+#dialog-quiz-container > div > button.success {
+  border: 1px solid green;
+  background-color: rgba(0, 255, 0, 0.3);
+}
+
+#dialog-quiz-container > div > button.failure {
+  border: 1px solid red;
+  background-color: rgba(255, 0, 0, 0.3);
 }
 
 .snowflake {

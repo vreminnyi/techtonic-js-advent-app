@@ -9,7 +9,9 @@ const TREE_SCENE = Symbol('TREE_SCENE');
 const HOME_SCENE = Symbol('HOME_SCENE');
 const KITCHEN_SCENE = Symbol('KITCHEN_SCENE');
 
+// Константи для ігор
 const SNOWFLAKE_GAME = Symbol('SNOWFLAKE_GAME');
+const SNOWFLAKE_GAME_STATE = Symbol('SNOWFLAKE_GAME_STATE');
 const GROW_TREE_GAME = Symbol('GROW_TREE_GAME');
 const GROW_TREE_STATE = Symbol('GROW_TREE_STATE');
 const GROW_TREE_MAX_HEIGHT = 250;
@@ -27,6 +29,16 @@ const GROW_TREE_ACTION_PLANT = Symbol.for('GROW_TREE_ACTION_PLANT');
 const GROW_TREE_ACTION_WATER = Symbol.for('GROW_TREE_ACTION_WATER');
 const GROW_TREE_ACTION_FILL = Symbol.for('GROW_TREE_ACTION_FILL');
 const GROW_TREE_ACTION_PEST = Symbol.for('GROW_TREE_ACTION_PEST');
+const HELPER_GAME = Symbol('HELPER_GAME');
+const HELPER_GAME_STATE = Symbol('HELPER_GAME_STATE');
+
+// Dialog
+const DIALOG_TEXT = Symbol('DIALOG_TEXT');
+const DIALOG_QUIZ = Symbol('DIALOG_QUIZ');
+const DIALOG_TYPE = {
+  text: DIALOG_TEXT,
+  quiz: DIALOG_QUIZ,
+};
 
 const MONEY = Symbol('MONEY');
 
@@ -220,7 +232,7 @@ class Greeting {
       Storage.set(Greeting.hashParam, this.#hash);
       DOMHelper.hideElements(cardElement, overlayElement);
       DOMHelper.removeElements(cardElement, overlayElement);
-      GameController.start();
+      GameController.instance.start();
     });
   }
 
@@ -332,15 +344,19 @@ class Game {
   container;
   containerId = 'game-container';
   isActive = false;
+  dialogs = [];
+  dialogTimeout;
 
-  constructor(controller, options) {
+  constructor(controller, options = {}) {
     this.controller = controller;
     this.options = options;
+    this.dialogs = this.options.dialogs ?? this.dialogs;
   }
 
   on() {
     this.isActive = true;
     this.createGameContainer();
+    setTimeout(this.showDialog.bind(this), 10000);
   }
 
   off() {
@@ -349,16 +365,27 @@ class Game {
       DOMHelper.removeElements(this.container);
       this.container = null;
     }
+    if (this.dialogTimeout) clearTimeout(this.dialogTimeout);
   }
 
   createGameContainer() {
-    if (this.container) return;
+    if (this.container || !this.containerId) return;
 
     this.container = document.createElement('div');
     this.container.id = this.containerId;
     SceneController.instance.sceneContainer.appendChild(
       this.container
     );
+  }
+
+  showDialog() {
+    if (!this.dialogs.length || !this.isActive) return;
+    clearTimeout(this.dialogTimeout);
+    const randomIndex = Math.floor(
+      Math.random() * this.dialogs.length
+    );
+    GameController.instance.showDialog(this.dialogs[randomIndex]);
+    this.dialogTimeout = setTimeout(() => this.showDialog(), 20000);
   }
 }
 
@@ -371,6 +398,7 @@ class SnowflakeGame extends Game {
   #moneyClassName = 'money';
   #snowflakes = [];
   #interval;
+  #state;
 
   constructor(controller, options) {
     super(controller, options);
@@ -386,6 +414,15 @@ class SnowflakeGame extends Game {
       this.options.moneyClassName ?? this.#moneyClassName;
     this.container = this.options.container ?? this.container;
     this.#speed = this.options.speed ?? this.#speed;
+    this.dialogs = this.options.dialogs ?? this.dialogs;
+
+    if (Storage.has(SNOWFLAKE_GAME_STATE.toString())) {
+      this.#state = Storage.get(SNOWFLAKE_GAME_STATE.toString());
+    } else {
+      this.#state = {
+        collected: 0,
+      };
+    }
   }
 
   on() {
@@ -399,6 +436,8 @@ class SnowflakeGame extends Game {
         this.createMoneySnowflake();
       }
     }, this.#speed);
+
+    setTimeout(this.showDialog.bind(this), 10000);
   }
 
   off() {
@@ -406,6 +445,7 @@ class SnowflakeGame extends Game {
     clearInterval(this.#interval);
     DOMHelper.removeElements(...this.#snowflakes);
     this.#snowflakes = [];
+    clearTimeout(this.dialogTimeout);
     return true;
   }
 
@@ -433,9 +473,15 @@ class SnowflakeGame extends Game {
     const containerWidth = this.container.clientWidth;
     element.style.left = `${Math.random() * containerWidth}px`;
     this.controller.changeMoney(this.#moneyEmojiValue);
+    this.#state.collected++;
+    this.#saveState();
     setTimeout(() => {
       if (element) DOMHelper.showElements(element);
     }, 5000 + Math.random() * 1000);
+  }
+
+  #saveState() {
+    Storage.set(SNOWFLAKE_GAME_STATE.toString(), this.#state);
   }
 }
 
@@ -445,6 +491,8 @@ class GrowTreeGame extends Game {
   #statistic;
   #button;
   #state;
+  pestsDialogs = [];
+  dialogStorage;
 
   #pestCost = 50;
 
@@ -464,6 +512,8 @@ class GrowTreeGame extends Game {
         actions: [],
       };
     }
+
+    this.pestsDialogs = options.pestsDialogs ?? this.pestsDialogs;
   }
 
   on() {
@@ -649,6 +699,8 @@ class GrowTreeGame extends Game {
 
         GameController.instance.changeMoney(-this.#pestCost);
 
+        this.dialogs = this.dialogStorage;
+
         this.setAction(Symbol.keyFor(GROW_TREE_ACTION_WATER));
       }
     }
@@ -669,11 +721,14 @@ class GrowTreeGame extends Game {
       case Symbol.keyFor(GROW_TREE_ACTION_FILL):
         this.fillButtonText();
         break;
-      case Symbol.keyFor(GROW_TREE_ACTION_PEST):
+      case Symbol.keyFor(GROW_TREE_ACTION_PEST): {
+        this.dialogStorage = this.dialogs;
+        this.dialogs = this.pestsDialogs;
         this.#button.textContent = `🪳 Прибрати шкідників 💸${
           this.#pestCost
         }`;
         break;
+      }
     }
 
     if (pests && pests <= this.#state.cooldown * 1000) {
@@ -766,6 +821,68 @@ class GrowTreeGame extends Game {
   save() {
     Storage.set(GROW_TREE_STATE.toString(), this.#state);
     this.writeStatistic();
+  }
+}
+
+class HelperGame extends Game {
+  containerId = null;
+  #state;
+  quizzes = [];
+
+  constructor(controller, options) {
+    super(controller, options);
+
+    if (Storage.has(HELPER_GAME_STATE.toString())) {
+      this.#state = Storage.get(HELPER_GAME_STATE.toString());
+    } else {
+      this.#state = {
+        quizzes: [],
+      };
+    }
+
+    this.quizzes = (
+      (this.options.quizzes ?? this.quizzes) ||
+      []
+    ).filter((row) => !this.#state.quizzes.includes(row.id));
+  }
+
+  on() {
+    super.on();
+    setTimeout(this.showDialog.bind(this), 30000);
+  }
+
+  off() {
+    super.off();
+  }
+
+  showDialog() {
+    if (!this.quizzes.length || !this.isActive) return;
+    clearTimeout(this.dialogTimeout);
+    const randomIndex = Math.floor(
+      Math.random() * this.quizzes.length
+    );
+
+    const { id, dialog } = this.quizzes[randomIndex];
+
+    dialog.on('win', (e) => {
+      this.addQuiz(id);
+      GameController.instance.changeMoney(e.prize);
+    });
+
+    GameController.instance.showDialog(dialog);
+    this.dialogTimeout = setTimeout(() => this.showDialog(), 60000);
+  }
+
+  addQuiz(id) {
+    this.#state.quizzes.push(id);
+    this.quizzes = this.quizzes.filter(
+      (row) => !this.#state.quizzes.includes(row.id)
+    );
+    this.save();
+  }
+
+  save() {
+    Storage.set(HELPER_GAME_STATE.toString(), this.#state);
   }
 }
 
@@ -876,7 +993,7 @@ class SceneController {
     GameController.instance.showDialog(dialogs[randomIndex]);
     this.#sceneDialogTimeout = setTimeout(
       () => this.showSceneDialog(),
-      30000
+      60000
     );
   }
 
@@ -1140,14 +1257,33 @@ class HelperDialog {
     this.#typeTimeout = setTimeout(() => this.#typeText(content), 50);
   }
 
+  #typeQuiz(dialog) {
+    const { container, content } = dialog;
+    if (!container || !content) return;
+    if (this.#charIndex >= content.length) {
+      DOMHelper.showElements(container.querySelector('div'));
+      return;
+    }
+
+    if (this.#charIndex === 0) {
+      this.dialogText.appendChild(container);
+    }
+
+    container.querySelector('p').textContent += content.charAt(
+      this.#charIndex
+    );
+    this.#charIndex++;
+    this.#typeTimeout = setTimeout(() => this.#typeQuiz(dialog), 50);
+  }
+
   showDialog(dialog) {
     clearTimeout(this.#typeTimeout);
     this.dialogText.textContent = '';
     this.#charIndex = 0;
-    if (dialog.type === 'text') {
-      this.#typeText(dialog.content);
-    } else if (dialog.type === 'question') {
-      this.#typeText(dialog.content);
+    if (dialog.type === DIALOG_TYPE['text']) {
+      this.#typeText(dialog.get());
+    } else if (dialog.type === DIALOG_TYPE['quiz']) {
+      this.#typeQuiz(dialog.get());
     }
   }
 }
@@ -1155,16 +1291,64 @@ class HelperDialog {
 class Dialog {
   constructor(content, options = {}) {
     this.content = content;
-    this.type = options.type ?? 'text';
+    this.type = options.type ?? DIALOG_TYPE['text'];
     this.options = options;
+    this.events = {};
+  }
+
+  on(event, listener) {
+    if (!this.events[event]) {
+      this.events[event] = [];
+    }
+    this.events[event].push(listener);
+  }
+
+  emit(event, ...args) {
+    if (this.events[event]) {
+      this.events[event].forEach((listener) => listener(...args));
+    }
   }
 
   get() {
-    if (this.type === 'text') return this.getText();
+    if (this.type === DIALOG_TYPE['text']) return this.getText();
+    if (this.type === DIALOG_TYPE['quiz']) return this.getQuiz();
   }
 
   getText() {
     return this.content;
+  }
+
+  getQuiz() {
+    const quizContainer = document.createElement('div');
+    quizContainer.id = 'dialog-quiz-container';
+    const quizText = document.createElement('p');
+    const quizOptions = document.createElement('div');
+    DOMHelper.hideElements(quizOptions);
+
+    (this.options.options || []).forEach((option) => {
+      const button = document.createElement('button');
+      button.textContent = option.value;
+
+      if (option.isAnswer) {
+        button.addEventListener('click', () => {
+          this.emit('win', { prize: this.options.prize });
+          button.classList.add('success');
+        });
+      } else {
+        button.addEventListener('click', () => {
+          button.classList.add('failure');
+        });
+      }
+      quizOptions.appendChild(button);
+    });
+
+    quizContainer.appendChild(quizText);
+    quizContainer.appendChild(quizOptions);
+
+    return {
+      container: quizContainer,
+      content: this.content,
+    };
   }
 }
 
@@ -1174,7 +1358,7 @@ const sceneDict = {
     name: 'street',
     buttons: [TREE_SCENE, HOME_SCENE],
     effects: [SnowEffect.instance],
-    games: [SNOWFLAKE_GAME],
+    games: [SNOWFLAKE_GAME, HELPER_GAME],
     dialogs: [
       new Dialog('З наступаючим новим роком 🎅'),
       new Dialog(
@@ -1284,10 +1468,194 @@ const gameDict = {
       speed: 1000,
       snowflakeClassName: SnowEffect.instance.snowflakeClass,
       container: SnowEffect.instance.container,
+      dialogs: [
+        new Dialog(
+          'Гроші летять із неба! Хапай швидше, поки сніг не розтанув! 💸❄️'
+        ),
+        new Dialog(
+          'Це пташка? Це літак? Ні, це купюра, яку ти майже зловив! 😂'
+        ),
+        new Dialog(
+          'Обережно, не переплутай банкноту зі сніжинкою – одна з них точно не гріє гаманець!'
+        ),
+        new Dialog(
+          'Зловив купюру? Тепер головне – не витратити все на мандарини! 🍊💰'
+        ),
+        new Dialog(
+          'Снігопад? Чи грошопад? У будь-якому випадку твоя удача десь поруч!'
+        ),
+        new Dialog(
+          'Чи знаєш ти, що кожна зловлена купюра додає +10 до твого святкового настрою?'
+        ),
+      ],
     },
   },
   [GROW_TREE_GAME]: {
     instance: GrowTreeGame,
+    options: {
+      dialogs: [
+        new Dialog(
+          'Чим більше води, тим вище ялинка. Але не перестарайся – не хочеш же виростити аквапарк! 💦🌲'
+        ),
+        new Dialog(
+          'Твоя ялинка точно любить тебе, якщо терпляче чекає на воду навіть у мороз! ❄️❤️'
+        ),
+        new Dialog(
+          'Відро набирається так повільно, наче воно відчуває святковий настрій. 🎄⏳'
+        ),
+        new Dialog(
+          `Пам'ятай: ялинка – це не кактус. Без води вона не витримає! 😜💧`
+        ),
+        new Dialog(
+          'Твоє відро повільно наповнюється... Може, це натяк, що ти маєш час на каву? ☕🌲'
+        ),
+        new Dialog(
+          'З такою ялинкою навіть Санта захоче переїхати до твого двору! 🎅🎄'
+        ),
+        new Dialog(
+          'Все в цьому світі має ціну… навіть вода для ялинки! 💸🌲'
+        ),
+        new Dialog(
+          'Ти інвестуєш у ялинку – це найзимовіший стартап! 😜🌟'
+        ),
+        new Dialog(
+          'Скільки грошей залишилося? Сподіваюся, вистачить і на подарунки під ялинку! 🎁💵'
+        ),
+      ],
+      pestsDialogs: [
+        new Dialog(
+          'О ні! Шкідники атакують! Мабуть, їм теж подобається твоя ялинка. 💀🪲'
+        ),
+        new Dialog(
+          'Швидше виводь цих хвостатих і вусатих! Інакше замість ялинки отримаєш кормовий завод! 😂🐛'
+        ),
+        new Dialog(
+          'Ці шкідники такі нахабні, що вже майже прикрасили себе гірляндами! 🎄🐜'
+        ),
+        new Dialog(
+          'Якщо побачиш шкідника з валізою – це твій шанс домовитися, щоб він поїхав! 😅🛄'
+        ),
+        new Dialog(
+          'Твоя ялинка – справжній магніт для комах! Може, вони хочуть стати її іграшками? 🐞🎀'
+        ),
+      ],
+    },
+  },
+  [HELPER_GAME]: {
+    instance: HelperGame,
+    options: {
+      quizzes: [
+        {
+          id: '09d189af-c179-4424-8a15-5a9442d4c245',
+          dialog: new Dialog(
+            'Який популярний напій асоціюється з зимовими святами?',
+            {
+              type: DIALOG_TYPE['quiz'],
+              prize: 100,
+              options: [
+                {
+                  value: 'Лимонад',
+                  isAnswer: false,
+                },
+                {
+                  value: 'Гарячий шоколад',
+                  isAnswer: true,
+                },
+                {
+                  value: 'Сидр',
+                  isAnswer: false,
+                },
+                {
+                  value: 'Кава',
+                  isAnswer: false,
+                },
+              ],
+            }
+          ),
+        },
+        {
+          id: '7739819a-5025-404a-bb3e-3b17ba455dd1',
+          dialog: new Dialog(
+            'Що традиційно ставлять на верхівку ялинки?',
+            {
+              type: DIALOG_TYPE['quiz'],
+              prize: 100,
+              options: [
+                {
+                  value: 'Дзвіночок',
+                  isAnswer: false,
+                },
+                {
+                  value: 'Сніговика',
+                  isAnswer: false,
+                },
+                {
+                  value: 'Зірку',
+                  isAnswer: true,
+                },
+                {
+                  value: 'Гірлянду',
+                  isAnswer: false,
+                },
+              ],
+            }
+          ),
+        },
+        {
+          id: '947a0328-23f7-45ae-bedb-41f0d9af86c8',
+          dialog: new Dialog('Що НЕ є символом зими?', {
+            type: DIALOG_TYPE['quiz'],
+            prize: 50,
+            options: [
+              {
+                value: 'Сніговик',
+                isAnswer: false,
+              },
+              {
+                value: 'Сани',
+                isAnswer: false,
+              },
+              {
+                value: 'Соняшник',
+                isAnswer: true,
+              },
+              {
+                value: 'Ковзани',
+                isAnswer: false,
+              },
+            ],
+          }),
+        },
+        {
+          id: '7a3afebf-4253-4cbf-a7a7-2abbbe1456d4',
+          dialog: new Dialog(
+            'Як більшість тварин переживають зиму?',
+            {
+              type: DIALOG_TYPE['quiz'],
+              prize: 75,
+              options: [
+                {
+                  value: 'Переїжджають до іншого лісу.',
+                  isAnswer: false,
+                },
+                {
+                  value: 'Засинають на всю зиму.',
+                  isAnswer: true,
+                },
+                {
+                  value: 'Одягають теплі шуби',
+                  isAnswer: false,
+                },
+                {
+                  value: 'Йдуть до міста',
+                  isAnswer: false,
+                },
+              ],
+            }
+          ),
+        },
+      ],
+    },
   },
 };
 
