@@ -10,6 +10,24 @@ const HOME_SCENE = Symbol('HOME_SCENE');
 const KITCHEN_SCENE = Symbol('KITCHEN_SCENE');
 
 const SNOWFLAKE_GAME = Symbol('SNOWFLAKE_GAME');
+const GROW_TREE_GAME = Symbol('GROW_TREE_GAME');
+const GROW_TREE_STATE = Symbol('GROW_TREE_STATE');
+const GROW_TREE_MAX_HEIGHT = 250;
+const GROW_TREE_HEIGHT_LEVEL = [
+  0,
+  20,
+  60,
+  100,
+  120,
+  150,
+  200,
+  GROW_TREE_MAX_HEIGHT,
+];
+const GROW_TREE_ACTION_PLANT = Symbol.for('GROW_TREE_ACTION_PLANT');
+const GROW_TREE_ACTION_WATER = Symbol.for('GROW_TREE_ACTION_WATER');
+const GROW_TREE_ACTION_FILL = Symbol.for('GROW_TREE_ACTION_FILL');
+const GROW_TREE_ACTION_PEST = Symbol.for('GROW_TREE_ACTION_PEST');
+
 const MONEY = Symbol('MONEY');
 
 // Класи
@@ -251,6 +269,10 @@ class GameController {
     return GameController.#instance;
   }
 
+  get treeSize() {
+    return this.#games[GROW_TREE_GAME].treeSize ?? 999;
+  }
+
   constructor() {
     this.#money = Number(
       Storage.get(MONEY.toString()) ?? this.#money
@@ -266,10 +288,6 @@ class GameController {
     SceneController.instance.init(options.scene);
     SmartphoneController.instance.turnOn();
     this.drawMoney();
-  }
-
-  get treeSize() {
-    return Storage.get(TREE_SIZE.toString()) || 0;
   }
 
   showDialog(dialog) {
@@ -295,8 +313,12 @@ class GameController {
     });
   }
 
+  get money() {
+    return Number(this.#money);
+  }
+
   changeMoney(change) {
-    this.#money += change;
+    this.#money += Number(change);
     Storage.set(MONEY.toString(), this.#money);
     this.drawMoney();
   }
@@ -307,6 +329,8 @@ class GameController {
 }
 
 class Game {
+  container;
+  containerId = 'game-container';
   isActive = false;
 
   constructor(controller, options) {
@@ -316,10 +340,25 @@ class Game {
 
   on() {
     this.isActive = true;
+    this.createGameContainer();
   }
 
   off() {
     this.isActive = false;
+    if (this.container) {
+      DOMHelper.removeElements(this.container);
+      this.container = null;
+    }
+  }
+
+  createGameContainer() {
+    if (this.container) return;
+
+    this.container = document.createElement('div');
+    this.container.id = this.containerId;
+    SceneController.instance.sceneContainer.appendChild(
+      this.container
+    );
   }
 }
 
@@ -331,7 +370,6 @@ class SnowflakeGame extends Game {
   #snowflakeClassName = 'snowflake';
   #moneyClassName = 'money';
   #snowflakes = [];
-  #container;
   #interval;
 
   constructor(controller, options) {
@@ -346,14 +384,14 @@ class SnowflakeGame extends Game {
       this.options.snowflakeClassName ?? this.#snowflakeClassName;
     this.#moneyClassName =
       this.options.moneyClassName ?? this.#moneyClassName;
-    this.#container = this.options.container ?? this.#container;
+    this.container = this.options.container ?? this.container;
     this.#speed = this.options.speed ?? this.#speed;
   }
 
   on() {
-    super.on();
+    this.isActive = true;
 
-    if (!this.#container) return;
+    if (!this.container) return;
     this.#snowflakes = [];
 
     this.#interval = setInterval(() => {
@@ -364,7 +402,7 @@ class SnowflakeGame extends Game {
   }
 
   off() {
-    super.off();
+    this.isActive = false;
     clearInterval(this.#interval);
     DOMHelper.removeElements(...this.#snowflakes);
     this.#snowflakes = [];
@@ -381,23 +419,353 @@ class SnowflakeGame extends Game {
       this.clickMoneySnowflake(e.target);
     });
 
-    const containerWidth = this.#container.clientWidth;
+    const containerWidth = this.container.clientWidth;
     const shift = Math.min(Math.random(), 0.9);
     snowflake.style.left = `${shift * containerWidth}px`;
     snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
     snowflake.innerText = this.#moneyEmoji;
-    this.#container.appendChild(snowflake);
+    this.container.appendChild(snowflake);
     this.#snowflakes.push(snowflake);
   }
 
   clickMoneySnowflake(element) {
     DOMHelper.hideElements(element);
-    const containerWidth = this.#container.clientWidth;
+    const containerWidth = this.container.clientWidth;
     element.style.left = `${Math.random() * containerWidth}px`;
     this.controller.changeMoney(this.#moneyEmojiValue);
     setTimeout(() => {
       if (element) DOMHelper.showElements(element);
     }, 5000 + Math.random() * 1000);
+  }
+}
+
+class GrowTreeGame extends Game {
+  containerId = 'grow-tree-game-container';
+  #heightLabel;
+  #statistic;
+  #button;
+  #state;
+
+  #pestCost = 50;
+
+  constructor(controller, options) {
+    super(controller, options);
+
+    if (Storage.has(GROW_TREE_STATE.toString())) {
+      this.#state = Storage.get(GROW_TREE_STATE.toString());
+    } else {
+      this.#state = {
+        height: 0,
+        level: 999,
+        waterCost: 10,
+        cooldown: 0,
+        action: Symbol.keyFor(GROW_TREE_ACTION_PLANT),
+        lastActionTime: 0,
+        actions: [],
+      };
+    }
+  }
+
+  on() {
+    super.on();
+    this.createStatistic();
+    this.createGameButton();
+  }
+
+  off() {
+    super.off();
+    if (this.container) DOMHelper.removeElements(this.container);
+    if (this.#button) {
+      DOMHelper.removeElements(this.#button);
+      this.#button = null;
+    }
+  }
+
+  createStatistic() {
+    this.#statistic = document.createElement('div');
+    this.#statistic.className = 'grow-tree-statistic';
+    this.writeStatistic();
+    this.container.appendChild(this.#statistic);
+  }
+
+  createGameButton() {
+    if (this.#button) return;
+
+    this.#button = document.createElement('button');
+    this.#button.className = 'grow-tree-game-button';
+
+    this.#button.addEventListener('click', () => {
+      switch (this.#state.action) {
+        case Symbol.keyFor(GROW_TREE_ACTION_PLANT):
+          this.plantTree();
+          break;
+        case Symbol.keyFor(GROW_TREE_ACTION_WATER):
+          this.waterTree();
+          break;
+        case Symbol.keyFor(GROW_TREE_ACTION_FILL):
+          this.fillWater();
+          break;
+        case Symbol.keyFor(GROW_TREE_ACTION_PEST):
+          this.removePests();
+          break;
+      }
+      this.save();
+    });
+
+    this.setAction(this.#state.action);
+    this.container.appendChild(this.#button);
+  }
+
+  plantTree() {
+    const { level } = this.#state;
+
+    this.setAction(Symbol.keyFor(GROW_TREE_ACTION_WATER));
+    this.#state.height = 0;
+    this.#state.level = 0;
+    this.#state.waterCost = 10;
+    this.#state.cooldown = 0;
+    this.addAction(Symbol.keyFor(GROW_TREE_ACTION_PLANT), 0);
+    this.save();
+
+    this.#state.level = GROW_TREE_HEIGHT_LEVEL.findLastIndex(
+      (height) => height <= this.#state.height
+    );
+
+    if (level !== this.#state.level) {
+      SceneController.instance.change(TREE_SCENE);
+    }
+  }
+
+  waterTree() {
+    const money = GameController.instance.money;
+    const { waterCost, action, level } = this.#state;
+
+    const enoughMoney = money >= waterCost;
+    const noPests = action !== Symbol.keyFor(GROW_TREE_ACTION_PEST);
+    const noCooldown = this.waterCooldown === 0;
+
+    if (!enoughMoney) {
+      alert('Недостатньо коштів для поливу ☹️');
+    }
+
+    if (!noPests) {
+      alert('Треба прибрати шкідників 🪳');
+    }
+
+    if (!noCooldown) {
+      alert('Недостатньо води для поливу ☹️');
+    }
+
+    if (enoughMoney && noPests && noCooldown) {
+      const waterCount = this.#state.actions.filter(
+        ([action]) => action === Symbol.keyFor(GROW_TREE_ACTION_WATER)
+      ).length;
+      this.#state.height += 5;
+      this.#state.waterCost = Math.ceil(this.#state.waterCost * 1.2);
+      this.#state.cooldown = 30 * (waterCount + 1);
+      this.#state.lastActionTime = Date.now();
+      this.addAction(
+        Symbol.keyFor(GROW_TREE_ACTION_WATER),
+        waterCost
+      );
+
+      GameController.instance.changeMoney(-waterCost);
+
+      this.#state.level = GROW_TREE_HEIGHT_LEVEL.findLastIndex(
+        (height) => height <= this.#state.height
+      );
+
+      if (level !== this.#state.level) {
+        SceneController.instance.change(TREE_SCENE);
+      }
+
+      const pests =
+        Math.random() < 0.2 ? this.#state.cooldown - 1 : 0;
+
+      this.setAction(
+        Symbol.keyFor(GROW_TREE_ACTION_FILL),
+        pests * 1000
+      );
+    }
+  }
+
+  fillWater() {
+    if (
+      confirm(
+        `Витратити ${this.waterCooldownCost}грн., щоб скоріше набрати води?`
+      )
+    ) {
+      const money = GameController.instance.money;
+      const cost = this.waterCooldownCost;
+      const enoughMoney = money >= cost;
+      const noCooldown = this.waterCooldown !== 0;
+
+      if (!enoughMoney) {
+        alert('Недостатньо коштів для поливу ☹️');
+      }
+
+      if (!noCooldown) {
+        alert('Недостатньо води для поливу ☹️');
+      }
+
+      if (enoughMoney && noCooldown) {
+        this.#state.cooldown = 0;
+        this.#state.lastActionTime = Date.now();
+        this.addAction(Symbol.keyFor(GROW_TREE_ACTION_FILL), cost);
+
+        GameController.instance.changeMoney(-cost);
+
+        this.setAction(Symbol.keyFor(GROW_TREE_ACTION_WATER));
+      }
+    }
+  }
+
+  removePests() {
+    if (
+      confirm(
+        `Витратити ${this.#pestCost}грн., щоб прибрати шкідників?`
+      )
+    ) {
+      const { action } = this.#state;
+      const money = GameController.instance.money;
+      const enoughMoney = money >= this.#pestCost;
+      const hasPests =
+        action === Symbol.keyFor(GROW_TREE_ACTION_PEST);
+
+      if (!enoughMoney) {
+        alert('Недостатньо коштів для операції ☹️');
+      }
+
+      if (!hasPests) {
+        alert('Шкідники відсутні 😊');
+      }
+
+      if (enoughMoney && hasPests) {
+        this.#state.lastActionTime = Date.now();
+        this.addAction(
+          Symbol.keyFor(GROW_TREE_ACTION_PEST),
+          this.#pestCost
+        );
+
+        GameController.instance.changeMoney(-this.#pestCost);
+
+        this.setAction(Symbol.keyFor(GROW_TREE_ACTION_WATER));
+      }
+    }
+  }
+
+  setAction(action, pests = 0) {
+    this.#state.action = action;
+
+    switch (action) {
+      case Symbol.keyFor(GROW_TREE_ACTION_PLANT):
+        this.#button.textContent = '🎄 Посадити ялинку';
+        break;
+      case Symbol.keyFor(GROW_TREE_ACTION_WATER):
+        this.#button.textContent = `🚿 Полити 💸${
+          this.#state.waterCost
+        }`;
+        break;
+      case Symbol.keyFor(GROW_TREE_ACTION_FILL):
+        this.fillButtonText();
+        break;
+      case Symbol.keyFor(GROW_TREE_ACTION_PEST):
+        this.#button.textContent = `🪳 Прибрати шкідників 💸${
+          this.#pestCost
+        }`;
+        break;
+    }
+
+    if (pests && pests <= this.#state.cooldown * 1000) {
+      setTimeout(
+        this.setAction.bind(this),
+        pests,
+        Symbol.keyFor(GROW_TREE_ACTION_PEST)
+      );
+    }
+  }
+
+  addAction(action, price) {
+    this.#state.actions.push([action, price, Date.now()]);
+  }
+
+  writeStatistic() {
+    let height = this.#state.height;
+
+    if (this.#state.height < 100) {
+      height = `${this.#state.height}см.`;
+    } else {
+      height = `${this.#state.height / 100}м.`;
+    }
+
+    const statisticObject = {
+      money: 0,
+      ...Object.keys(growTreeGameDict).reduce(
+        (acc, key) => ({
+          ...acc,
+          [key]: { money: 0, count: 0, label: growTreeGameDict[key] },
+        }),
+        {}
+      ),
+    };
+
+    const statistic = this.#state.actions.reduce((acc, row) => {
+      const [action, cost, timestamp] = row;
+
+      if (action === Symbol.keyFor(GROW_TREE_ACTION_PLANT)) {
+        acc[action].count = new Date(timestamp).toLocaleDateString();
+      } else {
+        acc[action].count++;
+        acc[action].money += cost;
+      }
+
+      acc.money += cost;
+
+      return acc;
+    }, statisticObject);
+
+    let statisticText = `Статистика:
+    Висота ялинки: ${height}`;
+
+    Object.keys(statistic).forEach((key) => {
+      if (key === 'money') return;
+      statisticText += `\n${statistic[key].label}: ${statistic[key].count} 💸 ${statistic[key].money}`;
+    });
+
+    statisticText += `\nЗагалом витрачено: 💸 ${statistic.money}`;
+    this.#statistic.innerText = statisticText;
+  }
+
+  get waterCooldown() {
+    const { lastActionTime, cooldown } = this.#state;
+    const now = Date.now();
+    const timePassed = Math.floor((now - lastActionTime) / 1000);
+    return Math.max(cooldown - timePassed, 0);
+  }
+
+  get waterCooldownCost() {
+    const cooldown = this.waterCooldown;
+    return Math.floor(cooldown * 0.1 + this.#state.waterCost / 2);
+  }
+
+  get treeSize() {
+    return this.#state.level ?? 999;
+  }
+
+  fillButtonText() {
+    const cooldown = this.waterCooldown;
+
+    if (cooldown) {
+      this.#button.textContent = `🪣 Вода набирається ще ${cooldown}с. 💸${this.waterCooldownCost}`;
+      setTimeout(this.fillButtonText.bind(this), 1000);
+    } else {
+      this.setAction(Symbol.keyFor(GROW_TREE_ACTION_WATER));
+    }
+  }
+
+  save() {
+    Storage.set(GROW_TREE_STATE.toString(), this.#state);
+    this.writeStatistic();
   }
 }
 
@@ -430,6 +798,10 @@ class SceneController {
 
   get currentScene() {
     return this.#currentScene;
+  }
+
+  get sceneContainer() {
+    return this.#sceneContainer;
   }
 
   init(scene) {
@@ -712,11 +1084,8 @@ class Countdown {
     );
   }
 
-  static #updateCountdown() {
+  static get isCelebrateDate() {
     const now = new Date();
-    const nextNewYear = new Date(now.getFullYear() + 1, 0, 1);
-
-    let diff = nextNewYear - now;
     const startOfDay = new Date(
       now.getFullYear(),
       now.getMonth(),
@@ -724,7 +1093,16 @@ class Countdown {
     );
     const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
 
-    if (startOfDay.getTime() === firstDayOfYear.getTime()) {
+    return startOfDay.getTime() === firstDayOfYear.getTime();
+  }
+
+  static #updateCountdown() {
+    const now = new Date();
+    const nextNewYear = new Date(now.getFullYear() + 1, 0, 1);
+
+    let diff = nextNewYear - now;
+
+    if (Countdown.isCelebrateDate) {
       diff = 0;
     }
 
@@ -821,8 +1199,8 @@ const sceneDict = {
   [TREE_SCENE]: {
     name: 'tree',
     buttons: [STREET_SCENE, HOME_SCENE],
-    effects: [SnowEffect.instance, ChristmasTreeEffect.instance],
-    games: [],
+    effects: [SnowEffect.instance],
+    games: [GROW_TREE_GAME],
     dialogs: [
       new Dialog(
         'Чуєш, як тріщать гілочки на ялинці? Це від морозу.'
@@ -842,7 +1220,7 @@ const sceneDict = {
   [HOME_SCENE]: {
     name: 'home',
     buttons: [TREE_SCENE, STREET_SCENE, KITCHEN_SCENE],
-    effects: [ChristmasTreeEffect.instance],
+    effects: [],
     games: [],
     dialogs: [
       new Dialog(
@@ -908,6 +1286,9 @@ const gameDict = {
       container: SnowEffect.instance.container,
     },
   },
+  [GROW_TREE_GAME]: {
+    instance: GrowTreeGame,
+  },
 };
 
 const timeDict = {
@@ -916,15 +1297,28 @@ const timeDict = {
   minutes: 'хв.',
   seconds: 'сек.',
 };
+const growTreeGameDict = {
+  [Symbol.keyFor(GROW_TREE_ACTION_PLANT)]: 'Посаджена',
+  [Symbol.keyFor(GROW_TREE_ACTION_WATER)]: 'Полито',
+  [Symbol.keyFor(GROW_TREE_ACTION_FILL)]: 'Прискорено',
+  [Symbol.keyFor(GROW_TREE_ACTION_PEST)]: 'Врятовано',
+};
 
 document.addEventListener('DOMContentLoaded', () => {
-  const gameOptions = {
+  Countdown.start(document.getElementById('countdown'));
+
+  // 1 січня ялинка повинна бути у домі, в інші дні на подвір'ї
+  const treeEffectScene = Countdown.isCelebrateDate
+    ? HOME_SCENE
+    : TREE_SCENE;
+  sceneDict[treeEffectScene].effects.push(
+    ChristmasTreeEffect.instance
+  );
+
+  Greeting.instance.greet();
+  GameController.instance.start({
     scene: STREET_SCENE,
     moneyText: document.getElementById('money'),
     helperDialog: document.getElementById('helper-dialog'),
-  };
-
-  Greeting.instance.greet();
-  GameController.instance.start(gameOptions);
-  Countdown.start(document.getElementById('countdown'));
+  });
 });

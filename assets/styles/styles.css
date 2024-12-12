@@ -6,16 +6,17 @@
 
 body,
 html {
+  font-size: 16px;
   font-family: "Courier New", Courier, monospace;
+  position: relative;
 }
 
 .background {
-  height: 100%;
-  margin: 0;
+  width: 100%;
   height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  top: 0;
+  left: 0;
+  position: absolute;
   background-size: contain;
   background-repeat: repeat;
   background-position: center;
@@ -133,7 +134,7 @@ html {
 #greeting-form input,
 #greeting-form textarea {
   margin-bottom: 1rem;
-  padding: .5rem;
+  padding: 0.5rem;
   font-size: 1rem;
   border-radius: 5px;
 }
@@ -168,15 +169,13 @@ html {
 }
 
 .game-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 90vw;
-  max-width: 600px;
+  width: 100vw;
+  min-width: 360px;
+  max-width: 430px;
   height: 100vh;
   background-color: #eafbf5;
-  border: 2px solid #000;
+  box-shadow: 0 0 0 1px #000;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
@@ -184,6 +183,7 @@ html {
   align-items: stretch;
   align-content: stretch;
   overflow: hidden;
+  position: relative;
 }
 
 .game-container.scene-home {
@@ -198,8 +198,7 @@ html {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem;
-  font-size: 1.2rem;
+  padding: .5rem;
   font-weight: bold;
 }
 
@@ -207,9 +206,10 @@ html {
   display: flex;
 }
 
-.game-container > header > .buttons > .button {
-  width: 4rem;
-  height: 4rem;
+.game-container > header > .buttons > .button,
+.game-container > footer > .smartphone-button {
+  width: 3.2rem;
+  height: 3.2rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -219,12 +219,20 @@ html {
   transition: all 0.2s ease-out;
 }
 
-.game-container > header > .buttons > .button:hover {
+.game-container > header > .buttons > .button:hover,
+.game-container > footer > .smartphone-button:hover {
   background-color: rgb(68 200 207 / 20%);
 }
 
-.game-container > header > .buttons > .button:active {
+.game-container > header > .buttons > .button:active,
+.game-container > footer > .smartphone-button:active {
   background-color: rgb(68 200 207 / 50%);
+}
+
+.game-container > header > .buttons > .button img,
+.game-container > footer > .smartphone-button img {
+  width: 100%;
+  height: 100%;
 }
 
 .game-container > header > .right {
@@ -233,20 +241,19 @@ html {
   align-items: center;
 }
 
-.game-container > header > .right >  #countdown {
+.game-container > header > .right > #countdown {
   display: flex;
   text-align: center;
-  padding: 10px;
 }
 
 .game-container > header > .right > #countdown .time-block {
-  padding: 0 .1rem;
+  padding: 0 0.1rem;
 }
 
 .game-container > header > .right > #countdown .time {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   margin: 5px 0;
-  padding: .1rem;
+  padding: 0.1rem;
   background-color: rgb(86 199 206);
   border-radius: 5px;
   color: #fff;
@@ -270,8 +277,9 @@ html {
   background-color: rgb(68 200 207);
   color: #fff;
   border-radius: 5px;
-  padding: 1rem;
+  padding: 1rem .5rem;
   margin-left: 1rem;
+  text-align: center;
 }
 
 .game-container.scene-home > header > .right > .money {
@@ -410,35 +418,39 @@ html {
 .game-container > footer {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 1rem;
-  font-size: 1rem;
+  align-items: flex-end;
+  padding: .5rem;
   font-weight: bold;
   position: relative;
   z-index: 1;
 }
 
 .game-container.scene-street > footer:before,
-.game-container.scene-tree > footer:before { 
-  content: ""; 
-  position: absolute; 
-  top: -6.9rem; 
-  left: 0; 
-  right: 0; 
-  height: 7rem; 
-  background: linear-gradient(to bottom, rgba(231, 248, 244, 0), rgba(231, 248, 244, 1)); 
+.game-container.scene-tree > footer:before {
+  content: "";
+  position: absolute;
+  top: calc(-7rem + 1px);
+  left: 0;
+  right: 0;
+  height: 7rem;
+  background: linear-gradient(
+    to bottom,
+    rgba(231, 248, 244, 0),
+    rgba(231, 248, 244, 1)
+  );
   pointer-events: none;
 }
 
 .game-container > footer > .helper {
   flex: 1;
   display: flex;
+  align-items: flex-end;
 }
 
 .game-container > footer > .helper > .avatar {
   flex: none;
-  width: 4rem;
-  height: 4rem;
+  width: 3.2rem;
+  height: 3.2rem;
   border-radius: 50%;
   background-image: url("../images/avatar.png");
   background-size: contain;
@@ -449,6 +461,7 @@ html {
 }
 
 .game-container > footer > .helper > .dialog-box {
+  min-height: 3.2rem;
   flex: 1;
   padding: 0.5rem 1rem;
   border-inline: 1rem solid #0000;
@@ -472,27 +485,8 @@ html {
 }
 
 .game-container > footer > .helper > .dialog-box > .dialog-text {
-  line-height: 1.5rem;
-}
-
-.game-container > footer > .smartphone-button {
-  width: 4rem;
-  height: 4rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 50%;
-  transition: all 0.2s ease-out;
-}
-
-.game-container > footer > .smartphone-button:hover {
-  background-color: rgb(68 200 207 / 20%);
-}
-
-.game-container > footer > .smartphone-button:active {
-  background-color: rgb(68 200 207 / 50%);
+  line-height: 1.2rem;
+  font-size: .8rem;
 }
 
 .snowflake {
@@ -524,6 +518,39 @@ html {
   z-index: 1;
 }
 
+#grow-tree-game-container {
+  z-index: 2;
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  height: 100%;
+  align-items: center;
+  flex-direction: column;
+}
+
+#grow-tree-game-container .grow-tree-game-button {
+  padding: .5rem;
+  background-color: #50c6cd;
+  color: #ebfbf5;
+  border-radius: 10px;
+  border-color: #007a82;
+  margin-bottom: .5rem;
+  font-size: 1.2em;
+}
+
+#grow-tree-game-container .grow-tree-statistic {
+  padding: .5rem;
+  background-color: #50c6cd;
+  color: #ebfbf5;
+  border-radius: 10px;
+  font-size: 1rem;
+  border-color: #007a82;
+  margin: 1rem;
+  position: relative;
+  align-self: flex-end;
+  font-size: 0.8rem;
+}
+
 @keyframes fall {
   to {
     transform: translateY(100vh);
@@ -552,4 +579,29 @@ html {
   user-select: none;
   /* Non-prefixed version, currently
                                 supported by Chrome, Edge, Opera and Firefox */
+}
+
+/* for general stylings (both, mobile && desktop) */
+@media screen and (min-width: 320px) {
+
+} 
+/* for only styles between 320px and 768px (most mobile devices) */
+@media screen and (max-width: 767px) {}
+
+/* general desktop && tablet styles if needed */
+@media screen and (min-width: 768px) {}
+
+/* only tablet styles */
+@media screen and (min-width: 768px) and (max-width: 1024px) {}
+
+/* start with desktop styling */
+@media screen and (min-width: 1025px) {
+  body, html {
+    font-size: 22px;
+  }
+
+  .game-container {
+    min-width: 430px;
+    max-width: 680px;
+  }
 }
