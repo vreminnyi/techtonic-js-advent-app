@@ -620,6 +620,85 @@ html {
   font-size: 0.8rem;
 }
 
+#music-game-container {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+}
+ 
+#music-game-container #music-game-options,
+#music-game-container #music-game-controls {
+  display: flex;
+  justify-content: space-between;
+}
+
+#music-game-container #music-game-options {
+  flex: 1
+}
+
+#music-game-container #music-game-controls {
+  padding-left: 1rem;
+}
+
+#music-game-container #music-game-options button {
+  flex: 1;
+  padding: .5rem 1rem;
+  color: #fff;
+  background-color: rgb(221 91 52);
+  border-radius: 5px;
+}
+
+#music-game-container #music-game-options button.success {
+  background-color: green;
+}
+
+#music-game-container #music-game-options button.failure {
+  background-color: red;
+}
+
+#music-game-container #music-game-options button:not(:last-child) {
+  margin-right: .1rem;
+}
+
+#music-game-container #music-game-controls button {
+  padding: 0 .5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+#music-game-container .songs-over-text,
+#music-game-container .songs-over-text + div {
+  padding: 0 .5rem;
+}
+  
+#music-game-container .songs-over-text {
+  flex: 1;
+  color: #fff;
+  border-radius: 5px;
+  padding-left: 2.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: .8em;
+  }
+  
+#music-game-container .songs-over-text p {
+  background-color: rgb(221 91 52);
+  display: inline-block;
+  padding: 0 .5rem;
+  line-height: 1.5rem;
+  border-radius: 5px;
+}
+
+#music-game-container .songs-over-text + div {
+  font-size: 1.5rem;
+  align-self: flex-end;
+}
+  
 @keyframes fall {
   to {
     transform: translateY(100vh);
