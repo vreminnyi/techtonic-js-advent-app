@@ -534,6 +534,91 @@ html {
   font-size: 0.8rem;
 }
 
+#garland-effect-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+#garland-effect-container .garland {
+  position: absolute;
+  display: flex;
+}
+
+#garland-effect-container .garland.top {
+  top: .1rem;
+  left: 0;
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
+#garland-effect-container .garland.right {
+  top: 0;
+  right: .1rem;
+  height: 100%;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+#garland-effect-container .garland.bottom {
+  bottom: .1rem;
+  left: 0;
+  width: 100%;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
+
+#garland-effect-container .garland.left {
+  top: 0;
+  left: .1rem;
+  height: 100%;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+/* Лампочки */
+#garland-effect-container .garland::before,
+#garland-effect-container .garland::after,
+#garland-effect-container .garland span {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: red;
+  animation: blink 1.5s infinite;
+}
+
+#garland-effect-container .garland span:nth-child(2n) {
+  background-color: green;
+  animation-delay: 0.3s;
+}
+
+#garland-effect-container .garland span:nth-child(3n) {
+  background-color: blue;
+  animation-delay: 0.6s;
+}
+
+#garland-effect-container .garland span:nth-child(4n) {
+  background-color: yellow;
+  animation-delay: 0.9s;
+}
+
+#garland-effect-container .garland span:nth-child(5n) {
+  background-color: purple;
+  animation-delay: 1.2s;
+}
+
+/* Анімація блимань */
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
 #dialog-quiz-container > div {
   display: flex;
 }
@@ -595,6 +680,9 @@ html {
   height: 100%;
   align-items: center;
   flex-direction: column;
+  position: absolute;
+  top: 0;
+  width: 100%;
 }
 
 #grow-tree-game-container .grow-tree-game-button {
@@ -620,6 +708,85 @@ html {
   font-size: 0.8rem;
 }
 
+#music-game-container {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+}
+ 
+#music-game-container #music-game-options,
+#music-game-container #music-game-controls {
+  display: flex;
+  justify-content: space-between;
+}
+
+#music-game-container #music-game-options {
+  flex: 1
+}
+
+#music-game-container #music-game-controls {
+  padding-left: 1rem;
+}
+
+#music-game-container #music-game-options button {
+  flex: 1;
+  padding: .5rem 1rem;
+  color: #fff;
+  background-color: rgb(221 91 52);
+  border-radius: 5px;
+}
+
+#music-game-container #music-game-options button.success {
+  background-color: green;
+}
+
+#music-game-container #music-game-options button.failure {
+  background-color: red;
+}
+
+#music-game-container #music-game-options button:not(:last-child) {
+  margin-right: .1rem;
+}
+
+#music-game-container #music-game-controls button {
+  padding: 0 .5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+#music-game-container .songs-over-text,
+#music-game-container .songs-over-text + div {
+  padding: 0 .5rem;
+}
+  
+#music-game-container .songs-over-text {
+  flex: 1;
+  color: #fff;
+  border-radius: 5px;
+  padding-left: 2.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: .8em;
+  }
+  
+#music-game-container .songs-over-text p {
+  background-color: rgb(221 91 52);
+  display: inline-block;
+  padding: 0 .5rem;
+  line-height: 1.5rem;
+  border-radius: 5px;
+}
+
+#music-game-container .songs-over-text + div {
+  font-size: 1.5rem;
+  align-self: flex-end;
+}
+  
 @keyframes fall {
   to {
     transform: translateY(100vh);

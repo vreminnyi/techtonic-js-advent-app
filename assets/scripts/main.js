@@ -1,6 +1,8 @@
 // Змінні
 const HIDDEN_CLASS = 'hidden';
 const INVISIBLE_CLASS = 'invisible';
+const SUCCESS_CLASS = 'success';
+const FAILURE_CLASS = 'failure';
 
 const TREE_SIZE = Symbol('TREE_SIZE');
 
@@ -31,6 +33,8 @@ const GROW_TREE_ACTION_FILL = Symbol.for('GROW_TREE_ACTION_FILL');
 const GROW_TREE_ACTION_PEST = Symbol.for('GROW_TREE_ACTION_PEST');
 const HELPER_GAME = Symbol('HELPER_GAME');
 const HELPER_GAME_STATE = Symbol('HELPER_GAME_STATE');
+const MUSIC_GAME = Symbol('MUSIC_GAME');
+const MUSIC_GAME_STATE = Symbol('MUSIC_GAME_STATE');
 
 // Dialog
 const DIALOG_TEXT = Symbol('DIALOG_TEXT');
@@ -115,7 +119,7 @@ class DOMHelper {
   }
 
   static removeElements(...elements) {
-    elements.forEach((el) => el.remove());
+    elements.forEach((el) => (el ? el.remove() : null));
   }
 
   static hideElements(...elements) {
@@ -299,7 +303,7 @@ class GameController {
     this.#initGames();
     SceneController.instance.init(options.scene);
     SmartphoneController.instance.turnOn();
-    this.drawMoney();
+    this.drawMoney(0);
   }
 
   showDialog(dialog) {
@@ -335,8 +339,27 @@ class GameController {
     this.drawMoney();
   }
 
-  drawMoney() {
-    this.#moneyContainer.innerText = this.#money;
+  drawMoney(duration = 1000) {
+    const currentMoney = parseInt(this.#moneyContainer.innerText, 10);
+    const increment =
+      (this.#money - currentMoney) / (duration / 16.67);
+
+    let currentValue = currentMoney;
+
+    const updateCounter = () => {
+      currentValue += increment;
+      if (
+        (increment > 0 && currentValue >= this.#money) ||
+        (increment < 0 && currentValue <= this.#money)
+      ) {
+        this.#moneyContainer.textContent = this.#money;
+      } else {
+        this.#moneyContainer.textContent = Math.round(currentValue);
+        requestAnimationFrame(updateCounter);
+      }
+    };
+
+    updateCounter();
   }
 }
 
@@ -707,6 +730,8 @@ class GrowTreeGame extends Game {
   }
 
   setAction(action, pests = 0) {
+    if (!this.#button) return;
+
     this.#state.action = action;
 
     switch (action) {
@@ -810,7 +835,7 @@ class GrowTreeGame extends Game {
   fillButtonText() {
     const cooldown = this.waterCooldown;
 
-    if (cooldown) {
+    if (cooldown && this.#button) {
       this.#button.textContent = `🪣 Вода набирається ще ${cooldown}с. 💸${this.waterCooldownCost}`;
       setTimeout(this.fillButtonText.bind(this), 1000);
     } else {
@@ -883,6 +908,143 @@ class HelperGame extends Game {
 
   save() {
     Storage.set(HELPER_GAME_STATE.toString(), this.#state);
+  }
+}
+
+class MusicGame extends Game {
+  containerId = 'music-game-container';
+  #state;
+  #songIndex = 0;
+  songs = [];
+
+  constructor(controller, options) {
+    super(controller, options);
+
+    if (Storage.has(MUSIC_GAME_STATE.toString())) {
+      this.#state = Storage.get(MUSIC_GAME_STATE.toString());
+    } else {
+      this.#state = {
+        songs: [],
+      };
+    }
+
+    this.songs = ((this.options.songs ?? this.songs) || []).filter(
+      (row) => !this.#state.songs.includes(row.id)
+    );
+  }
+
+  on() {
+    super.on();
+    if (this.songs.length) {
+      this.createControls();
+      this.loadSong(this.#songIndex);
+    } else {
+      this.songsOver();
+    }
+  }
+
+  off() {
+    super.off();
+    if (this.audio) this.audio.pause();
+    DOMHelper.removeElements(
+      this.audio,
+      this.controls,
+      this.playButton,
+      this.optionsContainer
+    );
+  }
+
+  createControls() {
+    this.audio = document.createElement('audio');
+    this.audio.id = 'music-game-player';
+    this.audio.setAttribute('preload', 'auto');
+
+    this.controls = document.createElement('div');
+    this.controls.id = 'music-game-controls';
+
+    this.playButton = document.createElement('button');
+    this.playButton.id = 'music-game-play-pause';
+    this.playButton.textContent = '▶️';
+
+    this.playButton.addEventListener('click', () => {
+      if (this.audio.paused) {
+        this.audio.play();
+        this.playButton.textContent = '⏸️';
+      } else {
+        this.audio.pause();
+        this.playButton.textContent = '▶️';
+      }
+    });
+
+    this.optionsContainer = document.createElement('div');
+    this.optionsContainer.id = 'music-game-options';
+
+    this.controls.appendChild(this.playButton);
+    DOMHelper.prependElements(
+      this.container,
+      this.audio,
+      this.controls,
+      this.optionsContainer
+    );
+  }
+
+  songsOver() {
+    this.container.innerHTML = `<div class="songs-over-text"><p>Ви вгадали всі пісні 👏 </p><p>Можете прослухати їх у вашому смартфоні 📱</p></div><div>👇</div>`;
+  }
+
+  loadSong(index) {
+    if (!this.songs.length) return this.songsOver();
+    const song = this.songs[index];
+    this.audio.src = song.src;
+    this.optionsContainer.innerHTML = '';
+
+    const buttons = [];
+
+    song.options.forEach((option, i) => {
+      const button = document.createElement('button');
+      button.textContent = option;
+      button.addEventListener(
+        'click',
+        i === song.correct
+          ? () => {
+              this.optionsContainer
+                .querySelectorAll('button')
+                .forEach((el) => (el.disabled = true));
+              button.classList.add(SUCCESS_CLASS);
+              this.addSong(song.id);
+              GameController.instance.changeMoney(10);
+              setTimeout(this.nextSong.bind(this), 3000);
+            }
+          : () => {
+              this.optionsContainer
+                .querySelectorAll('button')
+                .forEach((el) => (el.disabled = true));
+              button.classList.add(FAILURE_CLASS);
+              setTimeout(this.nextSong.bind(this), 1500);
+            }
+      );
+      this.optionsContainer.appendChild(button);
+    });
+  }
+
+  nextSong() {
+    if (!this.songs.length) return this.songsOver();
+    this.#songIndex = (this.#songIndex + 1) % this.songs.length;
+    this.loadSong(this.#songIndex);
+    this.audio.pause();
+    this.playButton.textContent = '▶️';
+  }
+
+  addSong(id) {
+    this.#state.songs.push(id);
+    this.songs = this.songs.filter(
+      (row) => !this.#state.songs.includes(row.id)
+    );
+    this.save();
+  }
+
+  save() {
+    Storage.set(MUSIC_GAME_STATE.toString(), this.#state);
   }
 }
 
@@ -1081,6 +1243,7 @@ class SmartphoneController {
 }
 
 class SceneEffect {
+  containerId = 'scene-effect-container';
   isActive = false;
   container;
 
@@ -1097,6 +1260,13 @@ class SceneEffect {
   initEffect() {
     console.log(`Init ${this.constructor.name}`);
   }
+
+  createContainer() {
+    if (this.container || !this.containerId) return;
+
+    this.container = document.createElement('div');
+    this.container.id = this.containerId;
+  }
 }
 
 class SnowEffect extends SceneEffect {
@@ -1104,6 +1274,8 @@ class SnowEffect extends SceneEffect {
   #numberOfSnowflakes = 100;
   #snowflakeClassName = 'snowflake';
   #snowflakeEmoji = '❄️';
+
+  containerId = 'snowflake-effect-container';
 
   static get instance() {
     if (!SnowEffect.#instance) {
@@ -1117,11 +1289,6 @@ class SnowEffect extends SceneEffect {
 
   get snowflakeClass() {
     return this.#snowflakeClassName;
-  }
-
-  createContainer() {
-    this.container = document.createElement('div');
-    this.container.id = 'snowflake-effect-container';
   }
 
   initEffect() {
@@ -1166,6 +1333,37 @@ class ChristmasTreeEffect extends SceneEffect {
     const sceneTreeClass = `tree-${GameController.instance.treeSize}`;
     opts.sceneContainer.classList.remove(sceneTreeClass);
     opts.background.classList.remove(sceneTreeClass);
+  }
+}
+
+class GarlandEffect extends SceneEffect {
+  static #instance;
+  containerId = 'garland-effect-container';
+
+  static get instance() {
+    if (!GarlandEffect.#instance) {
+      const effect = new GarlandEffect();
+      effect.createContainer();
+      GarlandEffect.#instance = effect;
+    }
+
+    return GarlandEffect.#instance;
+  }
+
+  initEffect() {
+    ['top', 'right', 'bottom', 'left'].forEach((side) => {
+      const sideElement = document.createElement('div');
+      sideElement.className = 'garland';
+      sideElement.classList.add(side);
+      this.container.appendChild(sideElement);
+    });
+
+    document.querySelectorAll('.garland').forEach((garland) => {
+      for (let i = 0; i < 25; i++) {
+        const bulb = document.createElement('span');
+        garland.appendChild(bulb);
+      }
+    });
   }
 }
 
@@ -1332,11 +1530,11 @@ class Dialog {
       if (option.isAnswer) {
         button.addEventListener('click', () => {
           this.emit('win', { prize: this.options.prize });
-          button.classList.add('success');
+          button.classList.add(SUCCESS_CLASS);
         });
       } else {
         button.addEventListener('click', () => {
-          button.classList.add('failure');
+          button.classList.add(FAILURE_CLASS);
         });
       }
       quizOptions.appendChild(button);
@@ -1404,8 +1602,8 @@ const sceneDict = {
   [HOME_SCENE]: {
     name: 'home',
     buttons: [TREE_SCENE, STREET_SCENE, KITCHEN_SCENE],
-    effects: [],
-    games: [],
+    effects: [GarlandEffect.instance],
+    games: [MUSIC_GAME],
     dialogs: [
       new Dialog(
         'Час зібратися разом, щоб святкувати та обмінюватися подарунками!'
@@ -1653,6 +1851,139 @@ const gameDict = {
               ],
             }
           ),
+        },
+      ],
+    },
+  },
+  [MUSIC_GAME]: {
+    instance: MusicGame,
+    options: {
+      dialogs: [
+        new Dialog('🎶 Спробуй вгадати пісні та отримай приз 💸'),
+        new Dialog(
+          '🎵 Слухай уважно, ця мелодія точно десь тобі знайома! Хто з нас меломан?'
+        ),
+        new Dialog(
+          '🎁 Гадаєш, знаєш правильну відповідь? Тоді тисни на кнопку!'
+        ),
+        new Dialog(
+          '💡 Підказка від мене: слухай уважніше – іноді назва звучить у тексті пісні!'
+        ),
+        new Dialog(
+          "✨ Кожна правильна відповідь – ще один крок до звання 'Святковий Діджей Року'!"
+        ),
+        new Dialog(
+          "🎤 Ой, здається, хтось тут знає, як звучить 'Jingle Bells'. Чи, може, це 'Last Christmas'?"
+        ),
+      ],
+      songs: [
+        {
+          id: '09d189af-c179-4424-8a15-5a9442d4c245',
+          title: 'Jingle Bell Rock',
+          src: 'assets/songs/Jingle Bell Rock.mp3',
+          options: [
+            'Jingle Bell Rock',
+            'Silent Night',
+            'Deck the Halls',
+            'We Wish You a Merry Christmas',
+          ],
+          correct: 0,
+        },
+        {
+          id: '7739819a-5025-404a-bb3e-3b17ba455dd1',
+          title: 'Feliz Navidad',
+          src: 'assets/songs/Feliz Navidad.mp3',
+          options: [
+            'Jingle Bells',
+            'Feliz Navidad',
+            'O Holy Night',
+            'Let It Snow',
+          ],
+          correct: 1,
+        },
+        {
+          id: '947a0328-23f7-45ae-bedb-41f0d9af86c8',
+          title: "Rockin' Around The Christmas Tree",
+          src: "assets/songs/Rockin' Around The Christmas Tree.mp3",
+          options: [
+            'White Christmas',
+            'Jingle Bells',
+            "Rockin' Around The Christmas Tree",
+            'Frosty the Snowman',
+          ],
+          correct: 2,
+        },
+        {
+          id: '90f104fe9-87dd-4e53-833c-14e3b79e2722',
+          title: 'Snowman',
+          src: 'assets/songs/Snowman.mp3',
+          options: [
+            'Snowman',
+            'Frosty the Snowman',
+            'Winter Dreams',
+            'Christmas in My Heart',
+          ],
+          correct: 0,
+        },
+        {
+          id: 'ba5703cc-eb76-4d97-847c-d5040f38c532',
+          title: 'Let It Snow! Let It Snow! Let It Snow!',
+          src: 'assets/songs/Let It Snow! Let It Snow! Let It Snow!.mp3',
+          options: [
+            "Baby It's Cold Outside",
+            'Let It Snow! Let It Snow! Let It Snow!',
+            'Winter Wonderland',
+            'White Christmas',
+          ],
+          correct: 1,
+        },
+        {
+          id: '93821cca-9eeb-4d28-af43-4b57e1978258',
+          title: 'Last Christmas',
+          src: 'assets/songs/Last Christmas.mp3',
+          options: [
+            'Last Christmas',
+            'Christmas Memories',
+            'All I Want for Christmas Is You',
+            'Happy Christmas',
+          ],
+          correct: 0,
+        },
+        {
+          id: 'f6e7968d-0368-4b6c-8c61-c8d9c8ca15cf',
+          title: "It's Beginning To Look A Lot Like Christmas",
+          src: "assets/songs/It's Beginning To Look A Lot Like Christmas.mp3",
+          options: [
+            'Christmas Time Is Here',
+            'Let It Snow! Let It Snow! Let It Snow!',
+            "It's Beginning To Look A Lot Like Christmas",
+            'Home for the Holidays',
+          ],
+          correct: 2,
+        },
+        {
+          id: '604791ba-d35f-4334-9f58-7bdb95ff8497',
+          title: 'Have Yourself A Merry Little Christmas',
+          src: 'assets/songs/Have Yourself A Merry Little Christmas.mp3',
+          options: [
+            'Happy Holidays',
+            'Christmas Waltz',
+            'Merry Christmas Darling',
+            'Have Yourself A Merry Little Christmas',
+          ],
+          correct: 3,
+        },
+        {
+          id: 'bc547c3f-7b5c-4583-8b5c-32be811dbd23',
+          title: 'All I Want for Christmas Is You',
+          src: 'assets/songs/All I Want for Christmas Is You.mp3',
+          options: [
+            'All I Want for Christmas Is You',
+            'Santa Tell Me',
+            'Christmas Love',
+            'Holiday Romance',
+          ],
+          correct: 0,
         },
       ],
     },
