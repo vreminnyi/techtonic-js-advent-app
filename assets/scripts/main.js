@@ -31,6 +31,8 @@ const GROW_TREE_ACTION_FILL = Symbol.for('GROW_TREE_ACTION_FILL');
 const GROW_TREE_ACTION_PEST = Symbol.for('GROW_TREE_ACTION_PEST');
 const HELPER_GAME = Symbol('HELPER_GAME');
 const HELPER_GAME_STATE = Symbol('HELPER_GAME_STATE');
+const MUSIC_GAME = Symbol('MUSIC_GAME');
+const MUSIC_GAME_STATE = Symbol('MUSIC_GAME_STATE');
 
 // Dialog
 const DIALOG_TEXT = Symbol('DIALOG_TEXT');
@@ -886,6 +888,60 @@ class HelperGame extends Game {
   }
 }
 
+class MusicGame extends Game {
+  containerId = 'music-game-container';
+  #state;
+  songs = [];
+
+  constructor(controller, options) {
+    super(controller, options);
+
+    if (Storage.has(MUSIC_GAME_STATE.toString())) {
+      this.#state = Storage.get(MUSIC_GAME_STATE.toString());
+    } else {
+      this.#state = {
+        songs: [],
+      };
+    }
+
+    this.songs = ((this.options.songs ?? this.songs) || []).filter(
+      (row) => !this.#state.songs.includes(row.id)
+    );
+  }
+
+  on() {
+    super.on();
+    this.createControls();
+  }
+
+  off() {
+    super.off();
+  }
+
+  createControls() {
+    //   <audio id="audio-player" src="" preload="auto"></audio>
+    // <div id="controls">
+    //   <button id="play-pause-btn">▶️</button>
+    //   <button id="skip-btn">⏩ Пропустити</button>
+    // </div>
+    // <div id="options">
+    //   <!-- Кнопки для відповідей будуть додані динамічно -->
+    // </div>
+  }
+
+  addSong(id) {
+    this.#state.songs.push(id);
+    this.songs = this.songs.filter(
+      (row) => !this.#state.songs.includes(row.id)
+    );
+    this.save();
+  }
+
+  save() {
+    Storage.set(HELPER_GAME_STATE.toString(), this.#state);
+  }
+}
+
 class SceneController {
   #scenes = {};
   #currentScene;
@@ -1653,6 +1709,49 @@ const gameDict = {
               ],
             }
           ),
+        },
+      ],
+    },
+  },
+  [MUSIC_GAME]: {
+    instance: MusicGame,
+    options: {
+      songs: [
+        {
+          id: '09d189af-c179-4424-8a15-5a9442d4c245',
+          title: 'Jingle Bells',
+          src: 'jingle_bells.mp3',
+          options: [
+            'Jingle Bells',
+            'Silent Night',
+            'Deck the Halls',
+            'We Wish You a Merry Christmas',
+          ],
+          correct: 0,
+        },
+        {
+          id: '7739819a-5025-404a-bb3e-3b17ba455dd1',
+          title: 'Silent Night',
+          src: 'silent_night.mp3',
+          options: [
+            'Jingle Bells',
+            'Silent Night',
+            'O Holy Night',
+            'Let It Snow',
+          ],
+          correct: 1,
+        },
+        {
+          id: '947a0328-23f7-45ae-bedb-41f0d9af86c8',
+          title: 'Let It Snow',
+          src: 'let_it_snow.mp3',
+          options: [
+            'White Christmas',
+            'Jingle Bells',
+            'Let It Snow',
+            'Frosty the Snowman',
+          ],
+          correct: 2,
         },
       ],
     },
