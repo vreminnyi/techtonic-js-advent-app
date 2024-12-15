@@ -1914,18 +1914,6 @@ const gameDict = {
           correct: 2,
         },
         {
-          id: '90f104fe9-87dd-4e53-833c-14e3b79e2722',
-          title: 'Snowman',
-          src: 'assets/songs/Snowman.mp3',
-          options: [
-            'Snowman',
-            'Frosty the Snowman',
-            'Winter Dreams',
-            'Christmas in My Heart',
-          ],
-          correct: 0,
-        },
-        {
           id: 'ba5703cc-eb76-4d97-847c-d5040f38c532',
           title: 'Let It Snow! Let It Snow! Let It Snow!',
           src: 'assets/songs/Let It Snow! Let It Snow! Let It Snow!.mp3',
