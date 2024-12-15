@@ -739,7 +739,7 @@ class GrowTreeGame extends Game {
         this.#button.textContent = '🎄 Посадити ялинку';
         break;
       case Symbol.keyFor(GROW_TREE_ACTION_WATER):
-        this.#button.textContent = `🚿 Полити 💸${
+        this.#button.textContent = `🚿 Полити 💸 ${
           this.#state.waterCost
         }`;
         break;
@@ -749,7 +749,7 @@ class GrowTreeGame extends Game {
       case Symbol.keyFor(GROW_TREE_ACTION_PEST): {
         this.dialogStorage = this.dialogs;
         this.dialogs = this.pestsDialogs;
-        this.#button.textContent = `🪳 Прибрати шкідників 💸${
+        this.#button.textContent = `🪳 Прибрати шкідників 💸 ${
           this.#pestCost
         }`;
         break;
@@ -836,7 +836,7 @@ class GrowTreeGame extends Game {
     const cooldown = this.waterCooldown;
 
     if (cooldown && this.#button) {
-      this.#button.textContent = `🪣 Вода набирається ще ${cooldown}с. 💸${this.waterCooldownCost}`;
+      this.#button.textContent = `🪣 Вода набирається ще ${cooldown}с. 💸 ${this.waterCooldownCost}`;
       setTimeout(this.fillButtonText.bind(this), 1000);
     } else {
       this.setAction(Symbol.keyFor(GROW_TREE_ACTION_WATER));

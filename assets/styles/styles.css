@@ -338,6 +338,72 @@ html {
 }
 
 .game-container > .scene > .smartphone {
+  width: 300px;
+  height: 600px;
+  background: #000;
+  border-radius: 30px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 0;
+  z-index: 10;
+}
+
+.game-container > .scene > .smartphone .screen {
+  flex: 1;
+  background: #fff;
+  border-radius: 20px;
+  margin: 20px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.game-container > .scene > .smartphone .app-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.game-container > .scene > .smartphone .app-button {
+  width: 60px;
+  height: 60px;
+  background: #0078d7;
+  color: #fff;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  text-align: center;
+}
+
+.game-container > .scene > .smartphone .app-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: #f8f8f8;
+  padding: 20px;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 18px;
+}
+
+.game-container > .scene > .smartphone .app-content.active {
+  display: flex;
+}
+
+/* .game-container > .scene > .smartphone {
   position: absolute;
   width: 50%;
   height: 100%;
@@ -351,34 +417,7 @@ html {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
   background: white;
   z-index: 3;
-}
-
-.screen {
-  width: 100%;
-  height: 100%;
-  overflow-y: scroll;
-  background: #eaeaea;
-}
-
-.todo-app {
-  padding: 20px;
-}
-
-.todo-app h2 {
-  margin: 0 0 20px 0;
-}
-
-.todo-app ul {
-  padding: 0;
-  list-style: none;
-}
-
-.todo-app ul li {
-  background: white;
-  margin: 5px 0;
-  padding: 10px;
-  border: 1px solid #ccc;
-}
+} */
 
 .game-container > .scene.scene-street {
   background-image: url("../images/scene-street.png");
