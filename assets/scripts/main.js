@@ -1041,6 +1041,7 @@ class MusicGame extends Game {
       (row) => !this.#state.songs.includes(row.id)
     );
     this.save();
+    AudioPlayerApp.updateSongList();
   }
 
   save() {
@@ -1108,6 +1109,7 @@ class SceneController {
   }
 
   change(scene) {
+    SmartphoneController.instance.toggle(false);
     const sceneInstance = this.#scenes[scene];
 
     if (!sceneInstance) return;
@@ -1210,8 +1212,12 @@ class Scene {
 
 class SmartphoneController {
   static #instance;
+  isActive = false;
 
   #showSmartphone = false;
+
+  #apps = {};
+  #activeApp;
 
   static get instance() {
     if (!SmartphoneController.#instance) {
@@ -1224,21 +1230,252 @@ class SmartphoneController {
   constructor() {
     this.button = document.getElementById('smartphone-button');
     this.smartphone = document.getElementById('smartphone');
+    this.appButtonContainer = document.querySelector(
+      '#smartphone .app-buttons'
+    );
+    this.closeAppButton = document.getElementById('close-app');
   }
 
   turnOn() {
     this.#initToggle();
+    this.#initApps();
+    this.isActive = true;
+  }
+
+  turnOff() {
+    this.isActive = false;
   }
 
   #initToggle() {
-    this.button.addEventListener('click', () => {
-      this.#showSmartphone = !this.#showSmartphone;
-      if (this.#showSmartphone) {
-        DOMHelper.showElements(smartphone);
-      } else {
-        DOMHelper.hideElements(smartphone);
-      }
+    this.button.addEventListener('click', () => this.toggle());
+  }
+
+  toggle(value) {
+    const status =
+      value === undefined ? !this.#showSmartphone : value;
+    this.#showSmartphone = status;
+    if (this.#showSmartphone) {
+      DOMHelper.showElements(this.smartphone);
+    } else {
+      DOMHelper.hideElements(this.smartphone);
+    }
+  }
+
+  #initApps() {
+    if (this.isActive) return;
+
+    this.closeAppButton.addEventListener(
+      'click',
+      this.#closeApp.bind(this)
+    );
+
+    [
+      {
+        id: 'audio-app',
+        title: 'Audio Player',
+        logo: '🎧',
+        controller: AudioPlayerApp,
+      },
+    ].forEach((app) => {
+      const content = document.createElement('div');
+      content.className = 'app-content';
+      content.id = app.id;
+      content.innerHTML = `${app.title} App`;
+
+      app.controller.instance.init(content);
+
+      this.appButtonContainer.after(content);
+
+      const button = document.createElement('div');
+      button.className = 'app-button';
+      button.setAttribute('data-app', content.id);
+      button.innerHTML = `<div class="logo">${app.logo}</div><div class="title">${app.title}</div>`;
+
+      button.addEventListener('click', this.#openApp.bind(this));
+
+      this.appButtonContainer.append(button);
+
+      this.#apps[app.id] = app.controller.instance;
     });
+  }
+
+  #openApp(e) {
+    const button = e.currentTarget;
+    const appId = button.getAttribute('data-app');
+
+    document.querySelectorAll('.app-content').forEach((content) => {
+      content.classList.remove('active');
+    });
+
+    const appContent = document.getElementById(appId);
+    appContent.classList.add('active');
+    DOMHelper.showElements(this.closeAppButton);
+    this.#activeApp = appId;
+    const controller = this.#apps[this.#activeApp];
+    if (controller) controller.toggle();
+  }
+
+  #closeApp() {
+    DOMHelper.hideElements(this.closeAppButton);
+    document.querySelectorAll('.app-content').forEach((content) => {
+      content.classList.remove('active');
+    });
+    const controller = this.#apps[this.#activeApp];
+    if (controller) controller.toggle();
+    this.#activeApp = null;
+  }
+}
+
+class AudioPlayerApp {
+  static #instance;
+
+  #isActive = false;
+  #songs = [];
+  #currentIndex = -1;
+  #isPlaying = false;
+
+  #audio;
+  #currentSong;
+  #playPause;
+  #songList;
+
+  static get instance() {
+    if (!AudioPlayerApp.#instance) {
+      const app = new AudioPlayerApp();
+      AudioPlayerApp.#instance = app;
+    }
+
+    return AudioPlayerApp.#instance;
+  }
+
+  constructor() {
+    this.updateSongList();
+  }
+
+  static updateSongList() {
+    return AudioPlayerApp.instance.updateSongList();
+  }
+
+  updateSongList() {
+    if (Storage.has(MUSIC_GAME_STATE.toString())) {
+      const musicGameState = Storage.get(MUSIC_GAME_STATE.toString());
+      this.#songs = gameDict[MUSIC_GAME].options.songs.filter((row) =>
+        musicGameState.songs.includes(row.id)
+      );
+    }
+    if (this.#songList) this.#loadSongList();
+  }
+
+  toggle() {
+    if (!this.#isActive) {
+      if (this.#currentIndex === -1) this.loadSong(0);
+    }
+    return (this.#isActive = !this.#isActive);
+  }
+
+  init(appContainer) {
+    appContainer.innerHTML = '';
+
+    const player = document.createElement('div');
+    player.className = 'audio-player';
+
+    this.#currentSong = document.createElement('div');
+    this.#currentSong.className = 'current-song';
+    this.#currentSong.textContent = 'No song playing';
+
+    const controls = document.createElement('div');
+    controls.className = 'controls';
+
+    const prev = document.createElement('button');
+    prev.className = 'control-prev';
+    prev.textContent = '⏮️';
+    prev.addEventListener('click', this.playPrevSong.bind(this));
+
+    this.#playPause = document.createElement('button');
+    this.#playPause.className = 'control-play-pause';
+    this.#playPause.textContent = '▶️';
+    this.#playPause.addEventListener(
+      'click',
+      this.playPauseSong.bind(this)
+    );
+
+    const next = document.createElement('button');
+    next.className = 'control-next';
+    next.textContent = '⏭️';
+    next.addEventListener('click', this.playNextSong.bind(this));
+
+    controls.append(prev, this.#playPause, next);
+
+    this.#songList = document.createElement('ul');
+    this.#songList.className = 'song-list';
+
+    this.#loadSongList();
+
+    this.#audio = document.createElement('audio');
+    this.#audio.setAttribute('preload', 'auto');
+    this.#audio.addEventListener(
+      'ended',
+      this.playNextSong.bind(this)
+    );
+
+    player.append(
+      this.#currentSong,
+      controls,
+      this.#songList,
+      this.#audio
+    );
+    appContainer.append(player);
+  }
+
+  #loadSongList() {
+    this.#songList.innerHTML = '';
+    this.#songs.forEach((song, index) => {
+      const li = document.createElement('li');
+      li.textContent = song.title;
+      li.addEventListener('click', () => {
+        this.#currentIndex = index;
+        this.loadSong(this.#currentIndex);
+        if (this.#isPlaying) this.#audio.play();
+      });
+      this.#songList.append(li);
+    });
+  }
+
+  loadSong(index) {
+    const selectedSong = this.#songs[index];
+    if (selectedSong) {
+      this.#audio.src = selectedSong.src;
+      this.#currentSong.textContent = selectedSong.title;
+      this.#currentIndex = index;
+      this.playPauseSong();
+    }
+  }
+
+  playPauseSong() {
+    if (!this.#isActive) return;
+    if (this.#audio.paused) {
+      this.#audio.play();
+      this.#playPause.textContent = '⏸️';
+    } else {
+      this.#audio.pause();
+      this.#playPause.textContent = '▶️';
+    }
+    this.#isPlaying = !this.#isPlaying;
+  }
+
+  playNextSong() {
+    this.#currentIndex =
+      (this.#currentIndex + 1) % this.#songs.length;
+    this.loadSong(this.#currentIndex);
+    if (this.#isPlaying) this.#audio.play();
+  }
+
+  playPrevSong() {
+    this.#currentIndex =
+      (this.#currentIndex - 1 + this.#songs.length) %
+      this.#songs.length;
+    this.loadSong(this.#currentIndex);
+    if (this.#isPlaying) this.#audio.play();
   }
 }
 
