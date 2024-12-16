@@ -187,12 +187,6 @@ html {
   background-color: #eafbf5;
   box-shadow: 0 0 0 1px #000;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  flex-wrap: nowrap;
-  justify-content: space-between;
-  align-items: stretch;
-  align-content: stretch;
   overflow: hidden;
   position: relative;
 }
@@ -330,6 +324,7 @@ html {
 .game-container > .scene {
   flex: 1;
   width: 100%;
+  height: calc(100% - 10rem);
   position: relative;
   background-size: contain;
   background-repeat: no-repeat;
@@ -338,46 +333,175 @@ html {
 }
 
 .game-container > .scene > .smartphone {
+  width: 400px;
+  height: 90%;
+  background: #000;
+  border-radius: 30px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
   position: absolute;
-  width: 50%;
-  height: 100%;
-  max-height: 600px;
-  transform: translate(-50%, -50%);
-  top: 50%;
-  left: 50%;
-  border: 16px solid black;
-  border-radius: 36px;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  background: white;
-  z-index: 3;
+  top: 5%;
+  left: calc(50% - 200px);
+  z-index: 10;
 }
 
-.screen {
+.game-container > .scene > .smartphone .wallpaper {
+  filter: blur(5px);
+  background-color: #fff;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
+
+.game-container > .scene.scene-street .smartphone .wallpaper {
+  background-image: url("../images/scene-street.png");
+  background-color: #ebfbf5;
+}
+
+.game-container > .scene.scene-tree .smartphone .wallpaper {
+  background-image: url("../images/scene-tree.png");
+  background-color: #ebfbf5;
+}
+
+.game-container > .scene.scene-home .smartphone .wallpaper {
+  background-image: url("../images/scene-home.png");
+  background-color: #f9e1ad;
+}
+
+.game-container > .scene.scene-kitchen .smartphone .wallpaper {
+  background-image: url("../images/scene-kitchen.png");
+  background-color: #f3fafc;
+}
+
+.game-container > .scene > .smartphone .screen {
+  flex: 1;
+  background-color: #fff;
+  border-radius: 20px;
+  margin: 20px;
+  overflow: hidden;
+  display: flex;
+  position: relative;
+  padding: 20px;
+}
+
+.game-container > .scene > .smartphone .app-buttons {
+  z-index: 1;
+}
+
+.game-container > .scene > .smartphone .app-button:nth-of-type(4n) {
+  margin-right: 0;
+}
+
+.game-container > .scene > .smartphone .app-button {
+  display: inline-block;
+  margin-right: 26px;
+}
+
+.game-container > .scene > .smartphone .app-button .logo {
+  width: 60px;
+  height: 60px;
+  background: #0078d7;
+  color: #fff;
+  border-radius: 15px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.game-container > .scene > .smartphone .app-button .title {
+  font-size: .6rem;
+  color: #000;
+  width: 60px;
+  height: 2rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  text-align: center;
+}
+
+.game-container > .scene > .smartphone .app-content {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
-  overflow-y: scroll;
-  background: #eaeaea;
+  display: none;
+  background: #f8f8f8;
+  padding: 20px calc(20px + .6rem);
+  box-sizing: border-box;
+  text-align: center;
+  font-size: 18px;
+  z-index: 2;
 }
 
-.todo-app {
-  padding: 20px;
+.game-container > .scene > .smartphone .app-content.active {
+  display: flex;
 }
 
-.todo-app h2 {
-  margin: 0 0 20px 0;
+
+.game-container > .scene > .smartphone .app-content#audio-app .audio-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
 }
 
-.todo-app ul {
-  padding: 0;
-  list-style: none;
+.game-container > .scene > .smartphone .app-content#audio-app .current-song {
+  font-size: 18px;
+  font-weight: bold;
 }
 
-.todo-app ul li {
-  background: white;
-  margin: 5px 0;
+.game-container > .scene > .smartphone .app-content#audio-app .controls button {
+  font-size: 18px;
+  margin: 0 10px;
   padding: 10px;
-  border: 1px solid #ccc;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background: #0078d7;
+  color: #fff;
+}
+
+.game-container > .scene > .smartphone .app-content#audio-app .controls button:hover {
+  background: #005a9e;
+}
+
+.game-container > .scene > .smartphone .app-content#audio-app .song-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  text-align: center;
+  max-height: calc(100% - 6rem);
+  overflow-y: scroll;
+}
+
+.game-container > .scene > .smartphone .app-content#audio-app .song-list li {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #ddd;
+}
+
+.game-container > .scene > .smartphone .app-content#audio-app .song-list li:hover {
+  background: #f0f0f0;
+}
+
+.game-container > .scene > .smartphone #close-app {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  cursor: pointer;
+  z-index: 2;
 }
 
 .game-container > .scene.scene-street {
@@ -466,8 +590,16 @@ html {
   align-items: flex-end;
   padding: 0.5rem;
   font-weight: bold;
-  position: relative;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
   z-index: 1;
+  height: 7rem;
+}
+
+.game-container.scene-street > footer,
+.game-container.scene-tree > footer {
+  background-color: #eafbf5;
 }
 
 .game-container.scene-street > footer:before,
