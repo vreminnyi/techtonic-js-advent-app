@@ -334,14 +334,14 @@ html {
 
 .game-container > .scene > .smartphone {
   width: 400px;
-  height: 700px;
+  height: 90%;
   background: #000;
   border-radius: 30px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   position: absolute;
-  top: calc(50% - 350px);;
+  top: 5%;
   left: calc(50% - 200px);
   z-index: 10;
 }
