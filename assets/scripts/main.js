@@ -36,6 +36,9 @@ const HELPER_GAME_STATE = Symbol('HELPER_GAME_STATE');
 const MUSIC_GAME = Symbol('MUSIC_GAME');
 const MUSIC_GAME_STATE = Symbol('MUSIC_GAME_STATE');
 
+const SHOPPING_APP_CART = Symbol('SHOPPING_APP_CART');
+const SHOPPING_APP_PRODUCTS = Symbol('SHOPPING_APP_PRODUCTS');
+
 // Dialog
 const DIALOG_TEXT = Symbol('DIALOG_TEXT');
 const DIALOG_QUIZ = Symbol('DIALOG_QUIZ');
@@ -1276,6 +1279,12 @@ class SmartphoneController {
         logo: '🎧',
         controller: AudioPlayerApp,
       },
+      {
+        id: 'shopping-app',
+        title: 'Shopping',
+        logo: '🛍️',
+        controller: ShoppingApp,
+      },
     ].forEach((app) => {
       const content = document.createElement('div');
       content.className = 'app-content';
@@ -1476,6 +1485,311 @@ class AudioPlayerApp {
       this.#songs.length;
     this.loadSong(this.#currentIndex);
     if (this.#isPlaying) this.#audio.play();
+  }
+}
+
+class ShoppingApp {
+  static #instance;
+
+  #isActive = false;
+  #showCart = false;
+
+  #products = {
+    Potato: {
+      id: 'Potato',
+      name: 'Картопля',
+      image: '🥔',
+      price: 15,
+    },
+    Carrot: { id: 'Carrot', name: 'Морква', image: '🥕', price: 12 },
+    Eggs: { id: 'Eggs', name: 'Яйця', image: '🥚', price: 40 },
+    Peas: { id: 'Peas', name: 'Горошок', image: '🌱', price: 25 },
+    Meat: { id: 'Meat', name: "М'ясо", image: '🍖', price: 150 },
+    Cheese: { id: 'Cheese', name: 'Сир', image: '🧀', price: 100 },
+    Garlic: { id: 'Garlic', name: 'Часник', image: '🧄', price: 20 },
+    Salmon: { id: 'Salmon', name: 'Лосось', image: '🐟', price: 200 },
+    Lemon: { id: 'Lemon', name: 'Лимон', image: '🍋', price: 30 },
+    Greens: { id: 'Greens', name: 'Зелень', image: '🌿', price: 15 },
+    Salt: { id: 'Salt', name: 'Сіль', image: '🧂', price: 10 },
+    Pork: { id: 'Pork', name: 'Свинина', image: '🥩', price: 130 },
+    Biscuit: {
+      id: 'Biscuit',
+      name: 'Бісквіт',
+      image: '🎂',
+      price: 50,
+    },
+    Strawberry: {
+      id: 'Strawberry',
+      name: 'Полуниця',
+      image: '🍓',
+      price: 80,
+    },
+    Chocolate: {
+      id: 'Chocolate',
+      name: 'Шоколад',
+      image: '🍫',
+      price: 60,
+    },
+    Milk: { id: 'Milk', name: 'Молоко', image: '🥛', price: 35 },
+    Bread: { id: 'Bread', name: 'Хліб', image: '🍞', price: 25 },
+    Butter: { id: 'Butter', name: 'Масло', image: '🧈', price: 70 },
+    Apple: { id: 'Apple', name: 'Яблуко', image: '🍎', price: 20 },
+    Banana: { id: 'Banana', name: 'Банан', image: '🍌', price: 30 },
+    Grapes: {
+      id: 'Grapes',
+      name: 'Виноград',
+      image: '🍇',
+      price: 60,
+    },
+    Pineapple: {
+      id: 'Pineapple',
+      name: 'Ананас',
+      image: '🍍',
+      price: 90,
+    },
+    Pickles: {
+      id: 'Pickles',
+      name: 'Мариновані огірки',
+      image: '🥒',
+      price: 45,
+    },
+  };
+  #cart = [];
+
+  #totalElement;
+  #productList;
+  #cartContainer;
+  #cartList;
+
+  static get instance() {
+    if (!ShoppingApp.#instance) {
+      ShoppingApp.#instance = new ShoppingApp();
+    }
+
+    return ShoppingApp.#instance;
+  }
+
+  constructor() {
+    this.#loadCart();
+  }
+
+  toggle() {
+    return (this.#isActive = !this.#isActive);
+  }
+
+  get cartTotal() {
+    return this.#cart.reduce(
+      (acc, item) =>
+        acc + this.#products[item.id].price * item.quantity,
+      0
+    );
+  }
+
+  init(appContainer) {
+    appContainer.innerHTML = '';
+
+    const body = document.createElement('div');
+    body.classList = 'shop-body';
+
+    // cart header
+    const header = document.createElement('header');
+
+    const cartTotal = document.createElement('div');
+    cartTotal.className = 'cart-total';
+
+    this.#totalElement = document.createElement('span');
+    this.#countTotal();
+
+    const cartButton = document.createElement('button');
+    cartButton.textContent = '🛒';
+
+    cartButton.addEventListener('click', this.toggleCart.bind(this));
+
+    cartTotal.textContent = ' грн.';
+    cartTotal.prepend(this.#totalElement);
+    header.append(cartTotal, cartButton);
+
+    // product list
+    this.#productList = document.createElement('ul');
+    this.#productList.className = 'product-list';
+
+    this.#getProductList();
+
+    // cart
+    this.#cartContainer = document.createElement('div');
+    this.#cartContainer.classList = 'cart-container hidden';
+
+    this.#cartList = document.createElement('ul');
+    this.#cartList.className = 'cart-list';
+
+    this.#getCartList();
+
+    const cartBuy = document.createElement('button');
+    cartBuy.textContent = 'Оплатити замовлення';
+
+    cartBuy.addEventListener('click', () => {
+      if (!this.cartTotal) return;
+      if (
+        confirm(
+          `Ви хочете придбати товари на сумму ${this.cartTotal} грн.?`
+        )
+      ) {
+        this.#buy();
+      }
+    });
+
+    this.#cartContainer.append(this.#cartList, cartBuy);
+    body.append(this.#productList, this.#cartContainer);
+    appContainer.append(header, body);
+  }
+
+  toggleCart() {
+    this.#showCart = !this.#showCart;
+    if (this.#showCart) {
+      DOMHelper.showElements(this.#cartContainer);
+    } else {
+      DOMHelper.hideElements(this.#cartContainer);
+    }
+  }
+
+  #loadCart() {
+    this.#cart = Storage.get(SHOPPING_APP_CART.toString()) || [];
+  }
+
+  #countTotal() {
+    if (!this.#totalElement) return;
+    this.#totalElement.textContent = this.cartTotal;
+  }
+
+  #getProductList() {
+    if (!this.#productList) return;
+
+    this.#productList.innerHTML = '';
+
+    Object.values(this.#products).forEach((product) => {
+      const productRow = document.createElement('li');
+      const productImage = document.createElement('div');
+      productImage.classList = 'product-image';
+      productImage.textContent = product.image;
+
+      const productInfo = document.createElement('div');
+      productInfo.className = 'product-info';
+      const productTitle = document.createElement('div');
+      productTitle.className = 'product-name';
+      productTitle.textContent = product.name;
+      const productPrice = document.createElement('div');
+      productPrice.className = 'product-price';
+      productPrice.textContent = `${product.price} грн.`;
+
+      productInfo.append(productTitle, productPrice);
+
+      const productBuy = document.createElement('div');
+      const productButton = document.createElement('button');
+      productButton.textContent = '🛒';
+
+      productButton.addEventListener('click', () =>
+        this.#addToCart(product.id)
+      );
+
+      productBuy.append(productButton);
+
+      productRow.append(productImage, productInfo, productBuy);
+
+      this.#productList.append(productRow);
+    });
+  }
+
+  #getCartList() {
+    if (!this.#cartList) return;
+
+    this.#cartList.innerHTML = '';
+
+    this.#cart.forEach((row) => {
+      const product = this.#products[row.id];
+      const productRow = document.createElement('li');
+      const productImage = document.createElement('div');
+      productImage.classList = 'product-image';
+      productImage.textContent = product.image;
+
+      const productInfo = document.createElement('div');
+      productInfo.className = 'product-info';
+      const productTitle = document.createElement('div');
+      productTitle.className = 'product-name';
+      productTitle.textContent = product.name;
+      const productPrice = document.createElement('div');
+      productPrice.className = 'product-total-price';
+      productPrice.textContent = `${
+        product.price * row.quantity
+      } грн.`;
+
+      productInfo.append(productTitle, productPrice);
+
+      const productCount = document.createElement('div');
+      const productNumber = document.createElement('input');
+      productNumber.type = 'number';
+      productNumber.value = row.quantity;
+      productNumber.setAttribute('min', '0');
+
+      productNumber.addEventListener('change', (e) =>
+        this.#addToCart(product.id, e.target.value)
+      );
+
+      productCount.append(productNumber);
+
+      productRow.append(productImage, productInfo, productCount);
+
+      this.#cartList.append(productRow);
+    });
+  }
+
+  #addToCart(id, quantity) {
+    const index = this.#cart.findIndex((row) => row.id === id);
+    if (index >= 0) {
+      if (quantity === undefined) {
+        this.#cart[index].quantity =
+          Number(this.#cart[index].quantity) + 1;
+      } else {
+        if (Number(quantity) === 0) {
+          this.#cart.splice(index, 1);
+        } else {
+          this.#cart[index].quantity = quantity;
+        }
+      }
+    } else {
+      this.#cart.push({ id, quantity: 1 });
+    }
+    this.#saveCart();
+  }
+
+  #saveCart() {
+    this.#countTotal();
+    this.#getCartList();
+    Storage.set(SHOPPING_APP_CART.toString(), this.#cart);
+  }
+
+  #buy() {
+    if (GameController.instance.money < this.cartTotal) {
+      return alert('Недостатньо коштів!');
+    }
+
+    const total = this.cartTotal;
+
+    const products =
+      Storage.get(SHOPPING_APP_PRODUCTS.toString()) || [];
+
+    this.#cart.forEach((product) => {
+      const index = products.findIndex(
+        (row) => row.id === product.id
+      );
+      if (index >= 0) products[index].quantity += product.quantity;
+      else products.push(product);
+    });
+
+    Storage.set(SHOPPING_APP_PRODUCTS.toString(), products);
+    this.#cart = [];
+    this.#saveCart();
+
+    GameController.instance.changeMoney(-total);
   }
 }
 
@@ -2221,6 +2535,7 @@ const timeDict = {
   minutes: 'хв.',
   seconds: 'сек.',
 };
+
 const growTreeGameDict = {
   [Symbol.keyFor(GROW_TREE_ACTION_PLANT)]: 'Посаджена',
   [Symbol.keyFor(GROW_TREE_ACTION_WATER)]: 'Полито',
