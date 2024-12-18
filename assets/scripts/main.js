@@ -1728,6 +1728,7 @@ class ShoppingApp {
       const productNumber = document.createElement('input');
       productNumber.type = 'number';
       productNumber.value = row.quantity;
+      productNumber.setAttribute('min', '0');
 
       productNumber.addEventListener('change', (e) =>
         this.#addToCart(product.id, e.target.value)
@@ -1748,7 +1749,11 @@ class ShoppingApp {
         this.#cart[index].quantity =
           Number(this.#cart[index].quantity) + 1;
       } else {
-        this.#cart[index].quantity = quantity;
+        if (Number(quantity) === 0) {
+          this.#cart.splice(index, 1);
+        } else {
+          this.#cart[index].quantity = quantity;
+        }
       }
     } else {
       this.#cart.push({ id, quantity: 1 });
