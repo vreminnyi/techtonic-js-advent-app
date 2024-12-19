@@ -3396,7 +3396,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   Greeting.instance.greet();
   GameController.instance.start({
-    scene: KITCHEN_SCENE,
+    scene: STREET_SCENE,
     moneyText: document.getElementById('money'),
     helperDialog: document.getElementById('helper-dialog'),
   });
