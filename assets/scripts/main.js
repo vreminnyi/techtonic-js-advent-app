@@ -35,6 +35,8 @@ const HELPER_GAME = Symbol('HELPER_GAME');
 const HELPER_GAME_STATE = Symbol('HELPER_GAME_STATE');
 const MUSIC_GAME = Symbol('MUSIC_GAME');
 const MUSIC_GAME_STATE = Symbol('MUSIC_GAME_STATE');
+const COOKING_GAME = Symbol('COOKING_GAME');
+const COOKING_GAME_STATE = Symbol('COOKING_GAME_STATE');
 
 const SHOPPING_APP_CART = Symbol('SHOPPING_APP_CART');
 const SHOPPING_APP_PRODUCTS = Symbol('SHOPPING_APP_PRODUCTS');
@@ -48,6 +50,69 @@ const DIALOG_TYPE = {
 };
 
 const MONEY = Symbol('MONEY');
+
+function dragElement(elmnt) {
+  let pos1 = 0,
+    pos2 = 0,
+    pos3 = 0,
+    pos4 = 0;
+
+  let headerElement = document.getElementById(elmnt.id + '-header');
+  if (headerElement) {
+    headerElement.onmousedown = dragMouseDown;
+    headerElement.ontouchstart = dragMouseDown;
+  } else {
+    elmnt.onmousedown = dragMouseDown;
+    elmnt.ontouchstart = dragMouseDown;
+  }
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+
+    if (e.type === 'touchstart') {
+      pos3 = e.touches[0].clientX;
+      pos4 = e.touches[0].clientY;
+    } else {
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+    }
+
+    document.onmouseup = closeDragElement;
+    document.ontouchend = closeDragElement;
+    document.onmousemove = elementDrag;
+    document.ontouchmove = elementDrag;
+    elmnt.classList.add('dragging');
+  }
+
+  function elementDrag(e) {
+    e = e || window.event;
+    e.preventDefault();
+
+    if (e.type === 'touchmove') {
+      pos1 = pos3 - e.touches[0].clientX;
+      pos2 = pos4 - e.touches[0].clientY;
+      pos3 = e.touches[0].clientX;
+      pos4 = e.touches[0].clientY;
+    } else {
+      pos1 = pos3 - e.clientX;
+      pos2 = pos4 - e.clientY;
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+    }
+
+    elmnt.style.top = elmnt.offsetTop - pos2 + 'px';
+    elmnt.style.left = elmnt.offsetLeft - pos1 + 'px';
+  }
+
+  function closeDragElement() {
+    document.onmouseup = null;
+    document.onmousemove = null;
+    document.ontouchend = null; // Видаляємо подію завершення торкання
+    document.ontouchmove = null; // Видаляємо подію переміщення торкання
+    elmnt.classList.remove('dragging');
+  }
+}
 
 // Класи
 class Encoder {
@@ -350,6 +415,7 @@ class GameController {
     let currentValue = currentMoney;
 
     const updateCounter = () => {
+      if (!increment) return;
       currentValue += increment;
       if (
         (increment > 0 && currentValue >= this.#money) ||
@@ -1052,6 +1118,470 @@ class MusicGame extends Game {
   }
 }
 
+class CookingGame extends Game {
+  containerId = 'cooking-game-container';
+  #state;
+  #products;
+
+  #showFridge = false;
+  #showCooking = false;
+
+  #dishes = {
+    'Olivier salad': {
+      id: 'olivier',
+      name: "Салат Олів'є",
+      image: '🥗',
+      ingredients: [
+        { id: 'Potato', quantity: 3 },
+        { id: 'Carrot', quantity: 2 },
+        { id: 'Egg', quantity: 4 },
+        { id: 'Peas', quantity: 1 },
+        { id: 'Meat', quantity: 1 },
+        { id: 'Pickle', quantity: 2 },
+        { id: 'Salt', quantity: 1 },
+        { id: 'Greens', quantity: 1 },
+      ],
+    },
+    'Stuffed Mushrooms': {
+      id: 'stuffed_mushrooms',
+      name: 'Фаршировані гриби',
+      image: '🍄',
+      ingredients: [
+        { id: 'Mushroom', quantity: 8 },
+        { id: 'Cheese', quantity: 2 },
+        { id: 'Garlic', quantity: 2 },
+        { id: 'Butter', quantity: 1 },
+        { id: 'Greens', quantity: 1 },
+        { id: 'Salt', quantity: 1 },
+      ],
+    },
+    'Banana Chocolate Cake': {
+      id: 'banana_chocolate_cake',
+      name: 'Шоколадний торт з бананом',
+      image: '🍰',
+      ingredients: [
+        { id: 'Biscuit', quantity: 1 },
+        { id: 'Banana', quantity: 2 },
+        { id: 'Chocolate', quantity: 2 },
+        { id: 'Milk', quantity: 2 },
+        { id: 'Butter', quantity: 1 },
+      ],
+    },
+    'Salmon Tartare': {
+      id: 'salmon_tartare',
+      name: 'Тартар з лосося',
+      image: '🐟',
+      ingredients: [
+        { id: 'Salmon', quantity: 1 },
+        { id: 'Lemon', quantity: 1 },
+        { id: 'Avocado', quantity: 1 },
+        { id: 'Greens', quantity: 1 },
+        { id: 'Salt', quantity: 1 },
+      ],
+    },
+    'Pineapple Shrimp Skewers': {
+      id: 'pineapple_shrimp_skewers',
+      name: 'Шашлички з ананасом та креветками',
+      image: '🍢',
+      ingredients: [
+        { id: 'Shrimp', quantity: 1 },
+        { id: 'Pineapple', quantity: 1 },
+        { id: 'Garlic', quantity: 2 },
+        { id: 'HotPepper', quantity: 1 },
+        { id: 'Lemon', quantity: 1 },
+      ],
+    },
+    'Apple and Grape Salad': {
+      id: 'apple_grape_salad',
+      name: 'Салат з яблуком і виноградом',
+      image: '🥗',
+      ingredients: [
+        { id: 'Apple', quantity: 2 },
+        { id: 'Grapes', quantity: 2 },
+        { id: 'Cheese', quantity: 1 },
+        { id: 'Greens', quantity: 1 },
+        { id: 'Salt', quantity: 1 },
+      ],
+    },
+    'Christmas Mulled Wine': {
+      id: 'christmas_mulled_wine',
+      name: 'Різдвяний глінтвейн',
+      image: '🍷',
+      ingredients: [
+        { id: 'Wine', quantity: 2 },
+        { id: 'Honey', quantity: 1 },
+        { id: 'Lemon', quantity: 1 },
+        { id: 'Cinnamon', quantity: 1 },
+      ],
+    },
+    'Chicken Roll with Cheese': {
+      id: 'chicken_roll_cheese',
+      name: 'Курячий рулет із сиром',
+      image: '🍗',
+      ingredients: [
+        { id: 'Meat', quantity: 2 },
+        { id: 'Cheese', quantity: 1 },
+        { id: 'Garlic', quantity: 2 },
+        { id: 'Salt', quantity: 1 },
+      ],
+    },
+    'Baked Salmon': {
+      id: 'baked_salmon',
+      name: 'Запечений лосось',
+      image: '🐟',
+      ingredients: [
+        { id: 'Salmon', quantity: 1 },
+        { id: 'Lemon', quantity: 1 },
+        { id: 'Salt', quantity: 1 },
+        { id: 'Greens', quantity: 1 },
+      ],
+    },
+    'Tartlets with Mushrooms and Cheese': {
+      id: 'tartlets_mushrooms_cheese',
+      name: 'Тарталетки з грибами та сиром',
+      image: '🍄',
+      ingredients: [
+        { id: 'Mushroom', quantity: 8 },
+        { id: 'Cheese', quantity: 2 },
+        { id: 'Butter', quantity: 1 },
+        { id: 'Doughnut', quantity: 8 },
+      ],
+    },
+    'Mashed Potatoes with Pork': {
+      id: 'mashed_potatoes_pork',
+      name: 'Пюре зі свининою',
+      image: '🥩',
+      ingredients: [
+        { id: 'Potato', quantity: 5 },
+        { id: 'Pork', quantity: 2 },
+        { id: 'Salt', quantity: 1 },
+        { id: 'Butter', quantity: 1 },
+      ],
+    },
+    'Festive Cake': {
+      id: 'festive_cake',
+      name: 'Святковий торт',
+      image: '🎂',
+      ingredients: [
+        { id: 'Biscuit', quantity: 1 },
+        { id: 'Chocolate', quantity: 2 },
+        { id: 'Strawberry', quantity: 1 },
+        { id: 'Butter', quantity: 1 },
+      ],
+    },
+    'Canapes with Caviar': {
+      id: 'canapes_caviar',
+      name: 'Канапе з ікрою',
+      image: '🍢',
+      ingredients: [
+        { id: 'Bread', quantity: 1 },
+        { id: 'Butter', quantity: 1 },
+        { id: 'Crab', quantity: 1 },
+      ],
+    },
+    'Fruit Salad': {
+      id: 'fruit_salad',
+      name: 'Фруктовий салат',
+      image: '🍍',
+      ingredients: [
+        { id: 'Apple', quantity: 1 },
+        { id: 'Banana', quantity: 1 },
+        { id: 'Grapes', quantity: 1 },
+        { id: 'Pineapple', quantity: 1 },
+      ],
+    },
+    'Duck with Apples': {
+      id: 'duck_apples',
+      name: 'Качка з яблуками',
+      image: '🍗',
+      ingredients: [
+        { id: 'Meat', quantity: 5 },
+        { id: 'Apple', quantity: 3 },
+        { id: 'Salt', quantity: 1 },
+        { id: 'Honey', quantity: 1 },
+      ],
+    },
+  };
+
+  constructor(controller, options) {
+    super(controller, options);
+    this.#getData();
+  }
+
+  on() {
+    super.on();
+    this.createControls();
+  }
+
+  off() {
+    super.off();
+  }
+
+  save() {
+    Storage.set(COOKING_GAME_STATE.toString(), this.#state);
+  }
+
+  #getData() {
+    if (Storage.has(COOKING_GAME_STATE.toString())) {
+      this.#state = Storage.get(COOKING_GAME_STATE.toString());
+    } else {
+      this.#state = {
+        dishes: [],
+      };
+    }
+
+    this.#getProducts();
+  }
+
+  saveProducts() {
+    const products = this.#products.map((product) => ({
+      id: product.id,
+      quantity: product.quantity,
+    }));
+
+    Storage.set(SHOPPING_APP_PRODUCTS.toString(), products);
+  }
+
+  get dishes() {
+    return Object.values(this.#dishes);
+  }
+
+  getDish(id) {
+    return this.#dishes[id];
+  }
+
+  #getProducts() {
+    if (Storage.has(SHOPPING_APP_PRODUCTS.toString())) {
+      const products =
+        Storage.get(SHOPPING_APP_PRODUCTS.toString()) || [];
+      this.#products = products.map((row) => {
+        const product = ShoppingApp.getProduct(row.id);
+        return {
+          id: row.id,
+          name: product.name,
+          image: product.image,
+          quantity: row.quantity,
+        };
+      });
+    } else {
+      this.#products = [];
+    }
+  }
+
+  createControls() {
+    this.container.innerHTML = '';
+
+    // Холодильник
+    const fridge = document.createElement('div');
+    fridge.className = 'fridge';
+    if (!this.#showFridge) DOMHelper.hideElements(fridge);
+
+    const fridgeHeader = document.createElement('header');
+    const fridgeTitle = document.createElement('h3');
+    fridgeTitle.textContent = '🧺 Холодильник';
+
+    const fridgeRefresh = document.createElement('button');
+    fridgeRefresh.textContent = '🔄';
+    fridgeRefresh.addEventListener('click', () => {
+      this.#getProducts();
+      this.createControls();
+    });
+
+    const closeButton = document.createElement('button');
+    closeButton.textContent = '❌';
+    closeButton.addEventListener('click', () => {
+      DOMHelper.hideElements(fridge);
+      this.#showFridge = false;
+    });
+
+    fridgeHeader.append(fridgeTitle, fridgeRefresh, closeButton);
+    fridge.append(fridgeHeader);
+
+    const productList = document.createElement('div');
+    productList.className = 'product-list';
+
+    this.#products.forEach((product) => {
+      const productElement = document.createElement('div');
+      productElement.className = 'product';
+      productElement.innerHTML = `<div class="image">${product.image}</div><div class="name">${product.name}</div><div class="quantity">${product.quantity}</div>`;
+      productList.appendChild(productElement);
+    });
+
+    fridge.append(productList);
+
+    const fridgeButton = document.createElement('button');
+    fridgeButton.textContent = '🧺';
+    fridgeButton.addEventListener('click', () => {
+      DOMHelper.showElements(fridge);
+      this.#showFridge = true;
+    });
+
+    // Приготування страви
+    const cooking = document.createElement('div');
+    cooking.className = 'cooking';
+    if (!this.#showCooking) DOMHelper.hideElements(cooking);
+
+    const cookingHeader = document.createElement('header');
+    const cookingTitle = document.createElement('h3');
+    cookingTitle.textContent = '🧑‍🍳 Готуємо до свята';
+
+    const cookingRefresh = document.createElement('button');
+    cookingRefresh.textContent = '🔄';
+    cookingRefresh.addEventListener('click', () => {
+      this.#getData();
+      this.createControls();
+    });
+
+    const closeCooking = document.createElement('button');
+    closeCooking.textContent = '❌';
+    closeCooking.addEventListener('click', () => {
+      DOMHelper.hideElements(cooking);
+      this.#showCooking = false;
+    });
+
+    cookingHeader.append(cookingTitle, cookingRefresh, closeCooking);
+    cooking.append(cookingHeader);
+
+    const dishList = document.createElement('div');
+    dishList.className = 'dish-list';
+
+    this.dishes.forEach((dish) => {
+      const dishElement = this.#getDishElement(dish);
+      dishList.appendChild(dishElement);
+    });
+    cooking.append(dishList);
+
+    const cookingButton = document.createElement('button');
+    cookingButton.textContent = '🧑‍🍳';
+    cookingButton.addEventListener('click', () => {
+      DOMHelper.showElements(cooking);
+      this.#showCooking = true;
+    });
+
+    const gameContainer = document.createElement('div');
+    gameContainer.className = 'cooking-game-container';
+
+    gameContainer.append(
+      fridge,
+      fridgeButton,
+      cooking,
+      cookingButton
+    );
+    this.container.append(gameContainer);
+  }
+
+  #getDishElement(dish) {
+    const dishElement = document.createElement('div');
+    dishElement.className = 'dish';
+    const dishInfo = document.createElement('div');
+    dishInfo.className = 'dish-info';
+
+    const isCooked = this.#state.dishes.includes(dish.id);
+    if (isCooked) dishElement.classList.add('cooked');
+
+    dishInfo.innerHTML = `<div class="image">${dish.image}</div><div class="name">${dish.name}</div>`;
+
+    if (isCooked) {
+      dishInfo.innerHTML += '<div class="cooked">✅</div>';
+      dishElement.append(dishInfo);
+    } else {
+      const cookButton = document.createElement('button');
+      cookButton.textContent = '🍳';
+      cookButton.addEventListener(
+        'click',
+        this.#cook.bind(this, dish)
+      );
+      dishInfo.appendChild(cookButton);
+
+      const dishIngredients = document.createElement('ul');
+      dishIngredients.className = 'ingredients';
+
+      dish.ingredients.forEach((ingredient) => {
+        const ingredientElement = document.createElement('li');
+
+        const productFromFridge = this.#products.find(
+          (product) => product.id === ingredient.id
+        );
+
+        const product = ShoppingApp.getProduct(ingredient.id);
+
+        ingredientElement.textContent = `${product.image} ${
+          product.name
+        } x${ingredient.quantity}(${
+          productFromFridge ? productFromFridge.quantity : 0
+        })`;
+
+        if (
+          !productFromFridge ||
+          productFromFridge.quantity < ingredient.quantity
+        ) {
+          ingredientElement.classList.add('not-enough');
+        }
+
+        dishIngredients.appendChild(ingredientElement);
+      });
+
+      dishElement.append(dishInfo, dishIngredients);
+    }
+
+    return dishElement;
+  }
+
+  #cook(dish) {
+    const { ingredients, name } = dish;
+
+    if (!confirm(`Приготувати ${name}?`)) return;
+
+    const enoughIngredients = ingredients.every((ingredient) =>
+      this.#products.find(
+        (product) =>
+          product.id === ingredient.id &&
+          product.quantity >= ingredient.quantity
+      )
+    );
+
+    if (!enoughIngredients) {
+      return alert(
+        'Недостатньо інгредієнтів для приготування страви ☹️'
+      );
+    }
+
+    ingredients.forEach((ingredient) => {
+      const product = this.#products.find(
+        (product) => product.id === ingredient.id
+      );
+      product.quantity -= ingredient.quantity;
+    });
+    this.saveProducts();
+
+    this.#state.dishes.push(dish.id);
+    this.save();
+    this.#getData();
+    this.createControls();
+  }
+
+  showFridge() {
+    const fridge = document.createElement('div');
+    fridge.className = 'fridge';
+
+    this.#products.forEach((product) => {
+      const productElement = document.createElement('div');
+      productElement.className = 'product';
+      productElement.textContent = `${product.image} ${product.name} x${product.quantity}`;
+      fridge.appendChild(productElement);
+    });
+
+    const closeButton = document.createElement('button');
+    closeButton.textContent = '❌';
+    closeButton.addEventListener('click', () => {
+      DOMHelper.removeElements(fridge);
+    });
+
+    fridge.appendChild(closeButton);
+    this.container.appendChild(fridge);
+  }
+}
+
 class SceneController {
   #scenes = {};
   #currentScene;
@@ -1233,6 +1763,13 @@ class SmartphoneController {
   constructor() {
     this.button = document.getElementById('smartphone-button');
     this.smartphone = document.getElementById('smartphone');
+
+    const dragHeader = document.createElement('div');
+    dragHeader.id = 'smartphone-header';
+    dragHeader.textContent = '🤚';
+    this.smartphone.prepend(dragHeader);
+    dragElement(this.smartphone);
+
     this.appButtonContainer = document.querySelector(
       '#smartphone .app-buttons'
     );
@@ -1499,61 +2036,340 @@ class ShoppingApp {
       id: 'Potato',
       name: 'Картопля',
       image: '🥔',
+      price: 20,
+    },
+    Carrot: {
+      id: 'Carrot',
+      name: 'Морква',
+      image: '🥕',
+      price: 18,
+    },
+    Egg: {
+      id: 'Egg',
+      name: 'Яйце',
+      image: '🥚',
+      price: 7,
+    },
+    Peas: {
+      id: 'Peas',
+      name: 'Горошок',
+      image: '🌱',
+      price: 25,
+    },
+    Meat: {
+      id: 'Meat',
+      name: "М'ясо",
+      image: '🍖',
+      price: 180,
+    },
+    Cheese: {
+      id: 'Cheese',
+      name: 'Сир',
+      image: '🧀',
+      price: 150,
+    },
+    Garlic: {
+      id: 'Garlic',
+      name: 'Часник',
+      image: '🧄',
+      price: 50,
+    },
+    Salmon: {
+      id: 'Salmon',
+      name: 'Лосось',
+      image: '🐟',
+      price: 400,
+    },
+    Lemon: {
+      id: 'Lemon',
+      name: 'Лимон',
+      image: '🍋',
+      price: 60,
+    },
+    Greens: {
+      id: 'Greens',
+      name: 'Зелень',
+      image: '🌿',
       price: 15,
     },
-    Carrot: { id: 'Carrot', name: 'Морква', image: '🥕', price: 12 },
-    Eggs: { id: 'Eggs', name: 'Яйця', image: '🥚', price: 40 },
-    Peas: { id: 'Peas', name: 'Горошок', image: '🌱', price: 25 },
-    Meat: { id: 'Meat', name: "М'ясо", image: '🍖', price: 150 },
-    Cheese: { id: 'Cheese', name: 'Сир', image: '🧀', price: 100 },
-    Garlic: { id: 'Garlic', name: 'Часник', image: '🧄', price: 20 },
-    Salmon: { id: 'Salmon', name: 'Лосось', image: '🐟', price: 200 },
-    Lemon: { id: 'Lemon', name: 'Лимон', image: '🍋', price: 30 },
-    Greens: { id: 'Greens', name: 'Зелень', image: '🌿', price: 15 },
-    Salt: { id: 'Salt', name: 'Сіль', image: '🧂', price: 10 },
-    Pork: { id: 'Pork', name: 'Свинина', image: '🥩', price: 130 },
+    Salt: {
+      id: 'Salt',
+      name: 'Сіль',
+      image: '🧂',
+      price: 10,
+    },
+    Pork: {
+      id: 'Pork',
+      name: 'Свинина',
+      image: '🥩',
+      price: 200,
+    },
     Biscuit: {
       id: 'Biscuit',
       name: 'Бісквіт',
       image: '🎂',
-      price: 50,
+      price: 80,
     },
     Strawberry: {
       id: 'Strawberry',
       name: 'Полуниця',
       image: '🍓',
-      price: 80,
+      price: 100,
     },
     Chocolate: {
       id: 'Chocolate',
       name: 'Шоколад',
       image: '🍫',
-      price: 60,
+      price: 70,
     },
-    Milk: { id: 'Milk', name: 'Молоко', image: '🥛', price: 35 },
-    Bread: { id: 'Bread', name: 'Хліб', image: '🍞', price: 25 },
-    Butter: { id: 'Butter', name: 'Масло', image: '🧈', price: 70 },
-    Apple: { id: 'Apple', name: 'Яблуко', image: '🍎', price: 20 },
-    Banana: { id: 'Banana', name: 'Банан', image: '🍌', price: 30 },
+    Milk: {
+      id: 'Milk',
+      name: 'Молоко',
+      image: '🥛',
+      price: 35,
+    },
+    Bread: {
+      id: 'Bread',
+      name: 'Хліб',
+      image: '🍞',
+      price: 25,
+    },
+    Butter: {
+      id: 'Butter',
+      name: 'Масло',
+      image: '🧈',
+      price: 90,
+    },
+    Apple: {
+      id: 'Apple',
+      name: 'Яблуко',
+      image: '🍎',
+      price: 25,
+    },
+    Banana: {
+      id: 'Banana',
+      name: 'Банан',
+      image: '🍌',
+      price: 40,
+    },
     Grapes: {
       id: 'Grapes',
       name: 'Виноград',
       image: '🍇',
-      price: 60,
+      price: 80,
     },
     Pineapple: {
       id: 'Pineapple',
       name: 'Ананас',
       image: '🍍',
-      price: 90,
+      price: 100,
     },
-    Pickles: {
-      id: 'Pickles',
-      name: 'Мариновані огірки',
+    Pickle: {
+      id: 'Pickle',
+      name: 'Маринований огірок',
       image: '🥒',
+      price: 30,
+    },
+    Tomato: {
+      id: 'Tomato',
+      name: 'Помідор',
+      image: '🍅',
       price: 45,
     },
+    HotPepper: {
+      id: 'HotPepper',
+      name: 'Перець чилі',
+      image: '🌶️',
+      price: 50,
+    },
+    Corn: {
+      id: 'Corn',
+      name: 'Кукурудза',
+      image: '🌽',
+      price: 30,
+    },
+    Mushroom: {
+      id: 'Mushroom',
+      name: 'Гриби',
+      image: '🍄',
+      price: 60,
+    },
+    Chestnut: {
+      id: 'Chestnut',
+      name: 'Каштан',
+      image: '🌰',
+      price: 80,
+    },
+    Avocado: {
+      id: 'Avocado',
+      name: 'Авокадо',
+      image: '🥑',
+      price: 70,
+    },
+    Eggplant: {
+      id: 'Eggplant',
+      name: 'Баклажан',
+      image: '🍆',
+      price: 55,
+    },
+    Kiwi: {
+      id: 'Kiwi',
+      name: 'Ківі',
+      image: '🥝',
+      price: 50,
+    },
+    Coconut: {
+      id: 'Coconut',
+      name: 'Кокос',
+      image: '🥥',
+      price: 120,
+    },
+    Crab: {
+      id: 'Crab',
+      name: 'Краб',
+      image: '🦀',
+      price: 300,
+    },
+    Shrimp: {
+      id: 'Shrimp',
+      name: 'Креветка',
+      image: '🍤',
+      price: 300,
+    },
+    Squid: {
+      id: 'Squid',
+      name: 'Кальмар',
+      image: '🦑',
+      price: 280,
+    },
+    Lobster: {
+      id: 'Lobster',
+      name: 'Лобстер',
+      image: '🦞',
+      price: 500,
+    },
+    Oyster: {
+      id: 'Oyster',
+      name: 'Устриця',
+      image: '🦪',
+      price: 400,
+    },
+    Rice: {
+      id: 'Rice',
+      name: 'Рис',
+      image: '🍚',
+      price: 52,
+    },
+    Spaghetti: {
+      id: 'Spaghetti',
+      name: 'Спагеті',
+      image: '🍝',
+      price: 40,
+    },
+    SweetPotato: {
+      id: 'SweetPotato',
+      name: 'Батат',
+      image: '🍠',
+      price: 70,
+    },
+    Honey: {
+      id: 'Honey',
+      name: 'Мед',
+      image: '🍯',
+      price: 150,
+    },
+    Doughnut: {
+      id: 'Doughnut',
+      name: 'Пончик',
+      image: '🍩',
+      price: 35,
+    },
+    Cookie: {
+      id: 'Cookie',
+      name: 'Печиво',
+      image: '🍪',
+      price: 40,
+    },
+    Beer: {
+      id: 'Beer',
+      name: 'Пиво',
+      image: '🍺',
+      price: 50,
+    },
+    Wine: {
+      id: 'Wine',
+      name: 'Вино',
+      image: '🍷',
+      price: 150,
+    },
+    Cocktail: {
+      id: 'Cocktail',
+      name: 'Коктейль',
+      image: '🍸',
+      price: 150,
+    },
+    TropicalDrink: {
+      id: 'TropicalDrink',
+      name: 'Тропічний напій',
+      image: '🍹',
+      price: 120,
+    },
+    Champagne: {
+      id: 'Champagne',
+      name: 'Шампанське',
+      image: '🍾',
+      price: 200,
+    },
+    Tea: {
+      id: 'Tea',
+      name: 'Чай',
+      image: '🍵',
+      price: 60,
+    },
+    Coffee: {
+      id: 'Coffee',
+      name: 'Кава',
+      image: '☕',
+      price: 80,
+    },
+    BabyBottle: {
+      id: 'BabyBottle',
+      name: 'Дитяча суміш',
+      image: '🍼',
+      price: 60,
+    },
+    Cucumber: {
+      id: 'Cucumber',
+      name: 'Огірок',
+      image: '🥒',
+      price: 35,
+    },
+    Peach: {
+      id: 'Peach',
+      name: 'Персик',
+      image: '🍑',
+      price: 90,
+    },
+    Cherries: {
+      id: 'Cherries',
+      name: 'Вишні',
+      image: '🍒',
+      price: 120,
+    },
+    Lemonade: {
+      id: 'Lemonade',
+      name: 'Лимонад',
+      image: '🍹',
+      price: 45,
+    },
+    Cinnamon: {
+      id: 'Cinnamon',
+      name: 'Кориця',
+      image: '🫚',
+      price: 10,
+    },
   };
+
   #cart = [];
 
   #totalElement;
@@ -1571,6 +2387,10 @@ class ShoppingApp {
 
   constructor() {
     this.#loadCart();
+  }
+
+  static getProduct(id) {
+    return ShoppingApp.instance.#products[id];
   }
 
   toggle() {
@@ -1610,6 +2430,14 @@ class ShoppingApp {
     header.append(cartTotal, cartButton);
 
     // product list
+    const search = document.createElement('input');
+    search.type = 'text';
+    search.placeholder = 'Пошук...';
+
+    search.addEventListener('input', (e) =>
+      this.#getProductList(e.target.value.toLowerCase())
+    );
+
     this.#productList = document.createElement('ul');
     this.#productList.className = 'product-list';
 
@@ -1640,7 +2468,7 @@ class ShoppingApp {
 
     this.#cartContainer.append(this.#cartList, cartBuy);
     body.append(this.#productList, this.#cartContainer);
-    appContainer.append(header, body);
+    appContainer.append(header, search, body);
   }
 
   toggleCart() {
@@ -1661,42 +2489,48 @@ class ShoppingApp {
     this.#totalElement.textContent = this.cartTotal;
   }
 
-  #getProductList() {
+  #getProductList(searchQuery) {
     if (!this.#productList) return;
 
     this.#productList.innerHTML = '';
 
-    Object.values(this.#products).forEach((product) => {
-      const productRow = document.createElement('li');
-      const productImage = document.createElement('div');
-      productImage.classList = 'product-image';
-      productImage.textContent = product.image;
+    Object.values(this.#products)
+      .filter((product) =>
+        searchQuery
+          ? product.name.toLowerCase().includes(searchQuery)
+          : true
+      )
+      .forEach((product) => {
+        const productRow = document.createElement('li');
+        const productImage = document.createElement('div');
+        productImage.classList = 'product-image';
+        productImage.textContent = product.image;
 
-      const productInfo = document.createElement('div');
-      productInfo.className = 'product-info';
-      const productTitle = document.createElement('div');
-      productTitle.className = 'product-name';
-      productTitle.textContent = product.name;
-      const productPrice = document.createElement('div');
-      productPrice.className = 'product-price';
-      productPrice.textContent = `${product.price} грн.`;
+        const productInfo = document.createElement('div');
+        productInfo.className = 'product-info';
+        const productTitle = document.createElement('div');
+        productTitle.className = 'product-name';
+        productTitle.textContent = product.name;
+        const productPrice = document.createElement('div');
+        productPrice.className = 'product-price';
+        productPrice.textContent = `${product.price} грн.`;
 
-      productInfo.append(productTitle, productPrice);
+        productInfo.append(productTitle, productPrice);
 
-      const productBuy = document.createElement('div');
-      const productButton = document.createElement('button');
-      productButton.textContent = '🛒';
+        const productBuy = document.createElement('div');
+        const productButton = document.createElement('button');
+        productButton.textContent = '🛒';
 
-      productButton.addEventListener('click', () =>
-        this.#addToCart(product.id)
-      );
+        productButton.addEventListener('click', () =>
+          this.#addToCart(product.id)
+        );
 
-      productBuy.append(productButton);
+        productBuy.append(productButton);
 
-      productRow.append(productImage, productInfo, productBuy);
+        productRow.append(productImage, productInfo, productBuy);
 
-      this.#productList.append(productRow);
-    });
+        this.#productList.append(productRow);
+      });
   }
 
   #getCartList() {
@@ -1781,8 +2615,10 @@ class ShoppingApp {
       const index = products.findIndex(
         (row) => row.id === product.id
       );
-      if (index >= 0) products[index].quantity += product.quantity;
-      else products.push(product);
+      if (index >= 0) {
+        products[index].quantity =
+          Number(products[index].quantity) + Number(product.quantity);
+      } else products.push(product);
     });
 
     Storage.set(SHOPPING_APP_PRODUCTS.toString(), products);
@@ -2185,7 +3021,7 @@ const sceneDict = {
   [KITCHEN_SCENE]: {
     name: 'kitchen',
     buttons: [HOME_SCENE],
-    games: [],
+    games: [COOKING_GAME],
     dialogs: [
       new Dialog(
         'Запах свіжоспечених пирогів та глінтвейну наповнює дім.'
@@ -2526,6 +3362,10 @@ const gameDict = {
         },
       ],
     },
+  },
+  [COOKING_GAME]: {
+    instance: CookingGame,
+    options: {},
   },
 };
 
