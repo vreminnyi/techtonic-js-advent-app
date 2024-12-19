@@ -512,7 +512,7 @@ html {
 
 .game-container > .scene > .smartphone .app-content#shopping-app .shop-body {
   width: 100%;
-  height: calc(100% - 1rem);
+  height: calc(100% - 2rem);
   position: relative;
 }
 
@@ -523,6 +523,12 @@ html {
   padding: 0rem 0 0.3rem 0;
   border-bottom: 1px solid #000;
   gap: 1rem;
+}
+
+.game-container > .scene > .smartphone .app-content#shopping-app input {
+  font-size: 1rem;
+  padding: 0.2rem;
+  width: 100%;
 }
 
 .game-container
@@ -976,7 +982,6 @@ html {
 
 #grow-tree-game-container {
   z-index: 2;
-  position: relative;
   display: flex;
   justify-content: space-between;
   height: 100%;
@@ -1087,6 +1092,124 @@ html {
 #music-game-container .songs-over-text + div {
   font-size: 1.5rem;
   align-self: flex-end;
+}
+
+#cooking-game-container {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  padding: .5rem;
+}
+
+#cooking-game-container .cooking-game-container {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  width: 100%;
+  height: 100%;
+}
+
+#cooking-game-container .cooking-game-container > button {
+  margin: 0.5rem;
+  width: 3rem;
+  font-size: 2rem;
+  line-height: 3rem;
+  border-radius: 50%;
+  border: 1px solid #0000002e;
+}
+
+#cooking-game-container .fridge,
+#cooking-game-container .cooking {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  padding: .5rem;
+  background-color: #fff;
+  box-shadow: 1px 1px 5px 1px #0000002e;
+  border-radius: 5px;
+}
+
+#cooking-game-container .fridge header,
+#cooking-game-container .cooking header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: .5rem;
+  gap: 1rem;
+}
+
+#cooking-game-container .fridge header > h3,
+#cooking-game-container .cooking header > h3 {
+  flex: 1;
+  border-bottom: 1px solid black;
+  padding-bottom: .2rem;
+}
+
+#cooking-game-container .fridge header > button,
+#cooking-game-container .cooking header > button {
+  width: 2rem;
+  border: none
+}
+
+#cooking-game-container .fridge .product-list,
+#cooking-game-container .cooking .dish-list {
+  max-height: calc(100% - 3rem);
+  padding: 0 1rem;
+  overflow-y: auto;
+}
+
+#cooking-game-container .fridge .product,
+#cooking-game-container .cooking .dish .dish-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+#cooking-game-container .cooking .dish {
+  padding-bottom: .5rem;
+}
+
+#cooking-game-container .fridge .product .image,
+#cooking-game-container .cooking .dish .dish-info .image {
+  font-size: 1.5rem;
+}
+
+#cooking-game-container .fridge .product .name,
+#cooking-game-container .cooking .dish .dish-info .name {
+  flex: 1;
+}
+
+#cooking-game-container .cooking .dish.cooked .dish-info .name {
+  text-decoration: line-through;
+}
+
+#cooking-game-container .fridge .product .quantity {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+#cooking-game-container .cooking .dish .dish-info button,
+#cooking-game-container .cooking .dish .dish-info .cooked {
+  font-size: 1.5rem;
+  background: none;
+  border: none;
+}
+
+#cooking-game-container .fridge .product .quantity:before {
+  content: "✖︎";
+  font-size: 1rem;
+}
+
+#cooking-game-container .cooking .dish .ingredients {
+  list-style: none;
+  padding-left: 2.5rem;
+  font-size: .8rem;
+}
+
+#cooking-game-container .cooking .dish .ingredients .not-enough {
+  color: red;
 }
 
 @keyframes fall {

@@ -35,7 +35,8 @@ const HELPER_GAME = Symbol('HELPER_GAME');
 const HELPER_GAME_STATE = Symbol('HELPER_GAME_STATE');
 const MUSIC_GAME = Symbol('MUSIC_GAME');
 const MUSIC_GAME_STATE = Symbol('MUSIC_GAME_STATE');
-const COOKING_GAME_STATE = Symbol('SHOPPING_APP_STATE');
+const COOKING_GAME = Symbol('COOKING_GAME');
+const COOKING_GAME_STATE = Symbol('COOKING_GAME_STATE');
 
 const SHOPPING_APP_CART = Symbol('SHOPPING_APP_CART');
 const SHOPPING_APP_PRODUCTS = Symbol('SHOPPING_APP_PRODUCTS');
@@ -1069,7 +1070,7 @@ class CookingGame extends Game {
         { id: 'Carrot', quantity: 2 },
         { id: 'Egg', quantity: 4 },
         { id: 'Peas', quantity: 1 },
-        { id: 'Meat', quantity: 300 },
+        { id: 'Meat', quantity: 1 },
         { id: 'Pickle', quantity: 2 },
         { id: 'Salt', quantity: 1 },
         { id: 'Greens', quantity: 1 },
@@ -1252,6 +1253,7 @@ class CookingGame extends Game {
 
   on() {
     super.on();
+    this.createControls();
   }
 
   off() {
@@ -1260,6 +1262,23 @@ class CookingGame extends Game {
 
   save() {
     Storage.set(COOKING_GAME_STATE.toString(), this.#state);
+  }
+
+  saveProducts() {
+    const products = this.#products.map((product) => ({
+      id: product.id,
+      quantity: product.quantity,
+    }));
+
+    Storage.set(SHOPPING_APP_PRODUCTS.toString(), products);
+  }
+
+  get dishes() {
+    return Object.values(this.#dishes);
+  }
+
+  getDish(id) {
+    return this.#dishes[id];
   }
 
   #getProducts() {
@@ -1272,12 +1291,202 @@ class CookingGame extends Game {
           id: row.id,
           name: product.name,
           image: product.image,
-          quantity: product.quantity,
+          quantity: row.quantity,
         };
       });
     } else {
       this.#products = [];
     }
+  }
+
+  createControls() {
+    this.container.innerHTML = '';
+
+    // Холодильник
+    const fridge = document.createElement('div');
+    fridge.className = 'fridge hidden';
+
+    const fridgeHeader = document.createElement('header');
+    const fridgeTitle = document.createElement('h3');
+    fridgeTitle.textContent = '🧊 Холодильник';
+
+    const closeButton = document.createElement('button');
+    closeButton.textContent = '❌';
+    closeButton.addEventListener('click', () => {
+      DOMHelper.hideElements(fridge);
+    });
+
+    fridgeHeader.append(fridgeTitle, closeButton);
+    fridge.append(fridgeHeader);
+
+    const productList = document.createElement('div');
+    productList.className = 'product-list';
+
+    this.#products.forEach((product) => {
+      const productElement = document.createElement('div');
+      productElement.className = 'product';
+      productElement.innerHTML = `<div class="image">${product.image}</div><div class="name">${product.name}</div><div class="quantity">${product.quantity}</div>`;
+      productList.appendChild(productElement);
+    });
+
+    fridge.append(productList);
+
+    const fridgeButton = document.createElement('button');
+    fridgeButton.textContent = '🧊';
+    fridgeButton.addEventListener('click', () => {
+      DOMHelper.showElements(fridge);
+    });
+
+    // Приготування страви
+    const cooking = document.createElement('div');
+    cooking.className = 'cooking hidden';
+
+    const cookingHeader = document.createElement('header');
+    const cookingTitle = document.createElement('h3');
+    cookingTitle.textContent = '🧑‍🍳 Готуємо до свята';
+
+    const closeCooking = document.createElement('button');
+    closeCooking.textContent = '❌';
+    closeCooking.addEventListener('click', () => {
+      DOMHelper.hideElements(cooking);
+    });
+
+    cookingHeader.append(cookingTitle, closeCooking);
+    cooking.append(cookingHeader);
+
+    const dishList = document.createElement('div');
+    dishList.className = 'dish-list';
+
+    this.dishes.forEach((dish) => {
+      const dishElement = this.#getDishElement(dish);
+      dishList.appendChild(dishElement);
+    });
+    cooking.append(dishList);
+
+    const cookingButton = document.createElement('button');
+    cookingButton.textContent = '🧑‍🍳';
+    cookingButton.addEventListener('click', () => {
+      DOMHelper.showElements(cooking);
+    });
+
+    const gameContainer = document.createElement('div');
+    gameContainer.className = 'cooking-game-container';
+
+    gameContainer.append(
+      fridge,
+      fridgeButton,
+      cooking,
+      cookingButton
+    );
+    this.container.append(gameContainer);
+  }
+
+  #getDishElement(dish) {
+    const dishElement = document.createElement('div');
+    dishElement.className = 'dish';
+    const dishInfo = document.createElement('div');
+    dishInfo.className = 'dish-info';
+
+    const isCooked = this.#state.dishes.includes(dish.id);
+    if (isCooked) dishElement.classList.add('cooked');
+
+    dishInfo.innerHTML = `<div class="image">${dish.image}</div><div class="name">${dish.name}</div>`;
+
+    if (isCooked) {
+      dishInfo.innerHTML += '<div class="cooked">✅</div>';
+      dishElement.append(dishInfo);
+    } else {
+      const cookButton = document.createElement('button');
+      cookButton.textContent = '🍳';
+      cookButton.addEventListener(
+        'click',
+        this.#cook.bind(this, dish)
+      );
+      dishInfo.appendChild(cookButton);
+
+      const dishIngredients = document.createElement('ul');
+      dishIngredients.className = 'ingredients';
+
+      dish.ingredients.forEach((ingredient) => {
+        const ingredientElement = document.createElement('li');
+
+        const productFromFridge = this.#products.find(
+          (product) => product.id === ingredient.id
+        );
+
+        const product = ShoppingApp.getProduct(ingredient.id);
+
+        ingredientElement.textContent = `${product.image} ${
+          product.name
+        } x${ingredient.quantity}(${
+          productFromFridge ? productFromFridge.quantity : 0
+        })`;
+
+        if (
+          !productFromFridge ||
+          productFromFridge.quantity < ingredient.quantity
+        ) {
+          ingredientElement.classList.add('not-enough');
+        }
+
+        dishIngredients.appendChild(ingredientElement);
+      });
+
+      dishElement.append(dishInfo, dishIngredients);
+    }
+
+    return dishElement;
+  }
+
+  #cook(dish) {
+    const { ingredients } = dish;
+    const enoughIngredients = ingredients.every((ingredient) =>
+      this.#products.find(
+        (product) =>
+          product.id === ingredient.id &&
+          product.quantity >= ingredient.quantity
+      )
+    );
+
+    if (!enoughIngredients) {
+      return alert(
+        'Недостатньо інгредієнтів для приготування страви ☹️'
+      );
+    }
+
+    ingredients.forEach((ingredient) => {
+      const product = this.#products.find(
+        (product) => product.id === ingredient.id
+      );
+      product.quantity -= ingredient.quantity;
+    });
+    this.saveProducts();
+
+    this.#state.dishes.push(dish.id);
+    this.save();
+    this.#getProducts();
+    this.createControls();
+  }
+
+  showFridge() {
+    const fridge = document.createElement('div');
+    fridge.className = 'fridge';
+
+    this.#products.forEach((product) => {
+      const productElement = document.createElement('div');
+      productElement.className = 'product';
+      productElement.textContent = `${product.image} ${product.name} x${product.quantity}`;
+      fridge.appendChild(productElement);
+    });
+
+    const closeButton = document.createElement('button');
+    closeButton.textContent = '❌';
+    closeButton.addEventListener('click', () => {
+      DOMHelper.removeElements(fridge);
+    });
+
+    fridge.appendChild(closeButton);
+    this.container.appendChild(fridge);
   }
 }
 
@@ -2054,6 +2263,12 @@ class ShoppingApp {
       image: '🍹',
       price: 45,
     },
+    Cinnamon: {
+      id: 'Cinnamon',
+      name: 'Кориця',
+      image: '🫚',
+      price: 10,
+    },
   };
 
   #cart = [];
@@ -2116,6 +2331,14 @@ class ShoppingApp {
     header.append(cartTotal, cartButton);
 
     // product list
+    const search = document.createElement('input');
+    search.type = 'text';
+    search.placeholder = 'Пошук...';
+
+    search.addEventListener('input', (e) =>
+      this.#getProductList(e.target.value.toLowerCase())
+    );
+
     this.#productList = document.createElement('ul');
     this.#productList.className = 'product-list';
 
@@ -2146,7 +2369,7 @@ class ShoppingApp {
 
     this.#cartContainer.append(this.#cartList, cartBuy);
     body.append(this.#productList, this.#cartContainer);
-    appContainer.append(header, body);
+    appContainer.append(header, search, body);
   }
 
   toggleCart() {
@@ -2167,42 +2390,48 @@ class ShoppingApp {
     this.#totalElement.textContent = this.cartTotal;
   }
 
-  #getProductList() {
+  #getProductList(searchQuery) {
     if (!this.#productList) return;
 
     this.#productList.innerHTML = '';
 
-    Object.values(this.#products).forEach((product) => {
-      const productRow = document.createElement('li');
-      const productImage = document.createElement('div');
-      productImage.classList = 'product-image';
-      productImage.textContent = product.image;
+    Object.values(this.#products)
+      .filter((product) =>
+        searchQuery
+          ? product.name.toLowerCase().includes(searchQuery)
+          : true
+      )
+      .forEach((product) => {
+        const productRow = document.createElement('li');
+        const productImage = document.createElement('div');
+        productImage.classList = 'product-image';
+        productImage.textContent = product.image;
 
-      const productInfo = document.createElement('div');
-      productInfo.className = 'product-info';
-      const productTitle = document.createElement('div');
-      productTitle.className = 'product-name';
-      productTitle.textContent = product.name;
-      const productPrice = document.createElement('div');
-      productPrice.className = 'product-price';
-      productPrice.textContent = `${product.price} грн.`;
+        const productInfo = document.createElement('div');
+        productInfo.className = 'product-info';
+        const productTitle = document.createElement('div');
+        productTitle.className = 'product-name';
+        productTitle.textContent = product.name;
+        const productPrice = document.createElement('div');
+        productPrice.className = 'product-price';
+        productPrice.textContent = `${product.price} грн.`;
 
-      productInfo.append(productTitle, productPrice);
+        productInfo.append(productTitle, productPrice);
 
-      const productBuy = document.createElement('div');
-      const productButton = document.createElement('button');
-      productButton.textContent = '🛒';
+        const productBuy = document.createElement('div');
+        const productButton = document.createElement('button');
+        productButton.textContent = '🛒';
 
-      productButton.addEventListener('click', () =>
-        this.#addToCart(product.id)
-      );
+        productButton.addEventListener('click', () =>
+          this.#addToCart(product.id)
+        );
 
-      productBuy.append(productButton);
+        productBuy.append(productButton);
 
-      productRow.append(productImage, productInfo, productBuy);
+        productRow.append(productImage, productInfo, productBuy);
 
-      this.#productList.append(productRow);
-    });
+        this.#productList.append(productRow);
+      });
   }
 
   #getCartList() {
@@ -2691,7 +2920,7 @@ const sceneDict = {
   [KITCHEN_SCENE]: {
     name: 'kitchen',
     buttons: [HOME_SCENE],
-    games: [],
+    games: [COOKING_GAME],
     dialogs: [
       new Dialog(
         'Запах свіжоспечених пирогів та глінтвейну наповнює дім.'
@@ -3033,6 +3262,10 @@ const gameDict = {
       ],
     },
   },
+  [COOKING_GAME]: {
+    instance: CookingGame,
+    options: {},
+  },
 };
 
 const timeDict = {
@@ -3062,7 +3295,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   Greeting.instance.greet();
   GameController.instance.start({
-    scene: STREET_SCENE,
+    scene: KITCHEN_SCENE,
     moneyText: document.getElementById('money'),
     helperDialog: document.getElementById('helper-dialog'),
   });
