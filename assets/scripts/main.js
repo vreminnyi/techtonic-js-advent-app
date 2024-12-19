@@ -1148,9 +1148,9 @@ class CookingGame extends Game {
       image: '🍄',
       ingredients: [
         { id: 'Mushroom', quantity: 8 },
-        { id: 'Cheese', quantity: 150 },
+        { id: 'Cheese', quantity: 2 },
         { id: 'Garlic', quantity: 2 },
-        { id: 'Butter', quantity: 50 },
+        { id: 'Butter', quantity: 1 },
         { id: 'Greens', quantity: 1 },
         { id: 'Salt', quantity: 1 },
       ],
@@ -1162,9 +1162,9 @@ class CookingGame extends Game {
       ingredients: [
         { id: 'Biscuit', quantity: 1 },
         { id: 'Banana', quantity: 2 },
-        { id: 'Chocolate', quantity: 200 },
-        { id: 'Milk', quantity: 100 },
-        { id: 'Butter', quantity: 50 },
+        { id: 'Chocolate', quantity: 2 },
+        { id: 'Milk', quantity: 2 },
+        { id: 'Butter', quantity: 1 },
       ],
     },
     'Salmon Tartare': {
@@ -1172,7 +1172,7 @@ class CookingGame extends Game {
       name: 'Тартар з лосося',
       image: '🐟',
       ingredients: [
-        { id: 'Salmon', quantity: 300 },
+        { id: 'Salmon', quantity: 1 },
         { id: 'Lemon', quantity: 1 },
         { id: 'Avocado', quantity: 1 },
         { id: 'Greens', quantity: 1 },
@@ -1184,7 +1184,7 @@ class CookingGame extends Game {
       name: 'Шашлички з ананасом та креветками',
       image: '🍢',
       ingredients: [
-        { id: 'Shrimp', quantity: 400 },
+        { id: 'Shrimp', quantity: 1 },
         { id: 'Pineapple', quantity: 1 },
         { id: 'Garlic', quantity: 2 },
         { id: 'HotPepper', quantity: 1 },
@@ -1197,8 +1197,8 @@ class CookingGame extends Game {
       image: '🥗',
       ingredients: [
         { id: 'Apple', quantity: 2 },
-        { id: 'Grapes', quantity: 150 },
-        { id: 'Cheese', quantity: 100 },
+        { id: 'Grapes', quantity: 2 },
+        { id: 'Cheese', quantity: 1 },
         { id: 'Greens', quantity: 1 },
         { id: 'Salt', quantity: 1 },
       ],
@@ -1208,8 +1208,8 @@ class CookingGame extends Game {
       name: 'Різдвяний глінтвейн',
       image: '🍷',
       ingredients: [
-        { id: 'Wine', quantity: 750 },
-        { id: 'Honey', quantity: 50 },
+        { id: 'Wine', quantity: 2 },
+        { id: 'Honey', quantity: 1 },
         { id: 'Lemon', quantity: 1 },
         { id: 'Cinnamon', quantity: 1 },
       ],
@@ -1219,8 +1219,8 @@ class CookingGame extends Game {
       name: 'Курячий рулет із сиром',
       image: '🍗',
       ingredients: [
-        { id: 'Meat', quantity: 400 },
-        { id: 'Cheese', quantity: 100 },
+        { id: 'Meat', quantity: 2 },
+        { id: 'Cheese', quantity: 1 },
         { id: 'Garlic', quantity: 2 },
         { id: 'Salt', quantity: 1 },
       ],
@@ -1230,7 +1230,7 @@ class CookingGame extends Game {
       name: 'Запечений лосось',
       image: '🐟',
       ingredients: [
-        { id: 'Salmon', quantity: 500 },
+        { id: 'Salmon', quantity: 1 },
         { id: 'Lemon', quantity: 1 },
         { id: 'Salt', quantity: 1 },
         { id: 'Greens', quantity: 1 },
@@ -1242,8 +1242,8 @@ class CookingGame extends Game {
       image: '🍄',
       ingredients: [
         { id: 'Mushroom', quantity: 8 },
-        { id: 'Cheese', quantity: 150 },
-        { id: 'Butter', quantity: 50 },
+        { id: 'Cheese', quantity: 2 },
+        { id: 'Butter', quantity: 1 },
         { id: 'Doughnut', quantity: 8 },
       ],
     },
@@ -1253,9 +1253,9 @@ class CookingGame extends Game {
       image: '🥩',
       ingredients: [
         { id: 'Potato', quantity: 5 },
-        { id: 'Pork', quantity: 300 },
+        { id: 'Pork', quantity: 2 },
         { id: 'Salt', quantity: 1 },
-        { id: 'Butter', quantity: 50 },
+        { id: 'Butter', quantity: 1 },
       ],
     },
     'Festive Cake': {
@@ -1264,9 +1264,9 @@ class CookingGame extends Game {
       image: '🎂',
       ingredients: [
         { id: 'Biscuit', quantity: 1 },
-        { id: 'Chocolate', quantity: 200 },
-        { id: 'Strawberry', quantity: 100 },
-        { id: 'Butter', quantity: 50 },
+        { id: 'Chocolate', quantity: 2 },
+        { id: 'Strawberry', quantity: 1 },
+        { id: 'Butter', quantity: 1 },
       ],
     },
     'Canapes with Caviar': {
@@ -1275,8 +1275,8 @@ class CookingGame extends Game {
       image: '🍢',
       ingredients: [
         { id: 'Bread', quantity: 1 },
-        { id: 'Butter', quantity: 50 },
-        { id: 'Crab', quantity: 50 },
+        { id: 'Butter', quantity: 1 },
+        { id: 'Crab', quantity: 1 },
       ],
     },
     'Fruit Salad': {
@@ -1286,7 +1286,7 @@ class CookingGame extends Game {
       ingredients: [
         { id: 'Apple', quantity: 1 },
         { id: 'Banana', quantity: 1 },
-        { id: 'Grapes', quantity: 100 },
+        { id: 'Grapes', quantity: 1 },
         { id: 'Pineapple', quantity: 1 },
       ],
     },
@@ -1295,10 +1295,10 @@ class CookingGame extends Game {
       name: 'Качка з яблуками',
       image: '🍗',
       ingredients: [
-        { id: 'Meat', quantity: 1000 },
+        { id: 'Meat', quantity: 5 },
         { id: 'Apple', quantity: 3 },
         { id: 'Salt', quantity: 1 },
-        { id: 'Honey', quantity: 50 },
+        { id: 'Honey', quantity: 1 },
       ],
     },
   };
