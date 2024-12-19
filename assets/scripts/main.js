@@ -35,6 +35,7 @@ const HELPER_GAME = Symbol('HELPER_GAME');
 const HELPER_GAME_STATE = Symbol('HELPER_GAME_STATE');
 const MUSIC_GAME = Symbol('MUSIC_GAME');
 const MUSIC_GAME_STATE = Symbol('MUSIC_GAME_STATE');
+const COOKING_GAME_STATE = Symbol('SHOPPING_APP_STATE');
 
 const SHOPPING_APP_CART = Symbol('SHOPPING_APP_CART');
 const SHOPPING_APP_PRODUCTS = Symbol('SHOPPING_APP_PRODUCTS');
@@ -350,6 +351,7 @@ class GameController {
     let currentValue = currentMoney;
 
     const updateCounter = () => {
+      if (!increment) return;
       currentValue += increment;
       if (
         (increment > 0 && currentValue >= this.#money) ||
@@ -1052,6 +1054,233 @@ class MusicGame extends Game {
   }
 }
 
+class CookingGame extends Game {
+  containerId = 'cooking-game-container';
+  #state;
+  #products;
+
+  #dishes = {
+    'Olivier salad': {
+      id: 'olivier',
+      name: "Салат Олів'є",
+      image: '🥗',
+      ingredients: [
+        { id: 'Potato', quantity: 3 },
+        { id: 'Carrot', quantity: 2 },
+        { id: 'Egg', quantity: 4 },
+        { id: 'Peas', quantity: 1 },
+        { id: 'Meat', quantity: 300 },
+        { id: 'Pickle', quantity: 2 },
+        { id: 'Salt', quantity: 1 },
+        { id: 'Greens', quantity: 1 },
+      ],
+    },
+    'Stuffed Mushrooms': {
+      id: 'stuffed_mushrooms',
+      name: 'Фаршировані гриби',
+      image: '🍄',
+      ingredients: [
+        { id: 'Mushroom', quantity: 8 },
+        { id: 'Cheese', quantity: 150 },
+        { id: 'Garlic', quantity: 2 },
+        { id: 'Butter', quantity: 50 },
+        { id: 'Greens', quantity: 1 },
+        { id: 'Salt', quantity: 1 },
+      ],
+    },
+    'Banana Chocolate Cake': {
+      id: 'banana_chocolate_cake',
+      name: 'Шоколадний торт з бананом',
+      image: '🍰',
+      ingredients: [
+        { id: 'Biscuit', quantity: 1 },
+        { id: 'Banana', quantity: 2 },
+        { id: 'Chocolate', quantity: 200 },
+        { id: 'Milk', quantity: 100 },
+        { id: 'Butter', quantity: 50 },
+      ],
+    },
+    'Salmon Tartare': {
+      id: 'salmon_tartare',
+      name: 'Тартар з лосося',
+      image: '🐟',
+      ingredients: [
+        { id: 'Salmon', quantity: 300 },
+        { id: 'Lemon', quantity: 1 },
+        { id: 'Avocado', quantity: 1 },
+        { id: 'Greens', quantity: 1 },
+        { id: 'Salt', quantity: 1 },
+      ],
+    },
+    'Pineapple Shrimp Skewers': {
+      id: 'pineapple_shrimp_skewers',
+      name: 'Шашлички з ананасом та креветками',
+      image: '🍢',
+      ingredients: [
+        { id: 'Shrimp', quantity: 400 },
+        { id: 'Pineapple', quantity: 1 },
+        { id: 'Garlic', quantity: 2 },
+        { id: 'HotPepper', quantity: 1 },
+        { id: 'Lemon', quantity: 1 },
+      ],
+    },
+    'Apple and Grape Salad': {
+      id: 'apple_grape_salad',
+      name: 'Салат з яблуком і виноградом',
+      image: '🥗',
+      ingredients: [
+        { id: 'Apple', quantity: 2 },
+        { id: 'Grapes', quantity: 150 },
+        { id: 'Cheese', quantity: 100 },
+        { id: 'Greens', quantity: 1 },
+        { id: 'Salt', quantity: 1 },
+      ],
+    },
+    'Christmas Mulled Wine': {
+      id: 'christmas_mulled_wine',
+      name: 'Різдвяний глінтвейн',
+      image: '🍷',
+      ingredients: [
+        { id: 'Wine', quantity: 750 },
+        { id: 'Honey', quantity: 50 },
+        { id: 'Lemon', quantity: 1 },
+        { id: 'Cinnamon', quantity: 1 },
+      ],
+    },
+    'Chicken Roll with Cheese': {
+      id: 'chicken_roll_cheese',
+      name: 'Курячий рулет із сиром',
+      image: '🍗',
+      ingredients: [
+        { id: 'Meat', quantity: 400 },
+        { id: 'Cheese', quantity: 100 },
+        { id: 'Garlic', quantity: 2 },
+        { id: 'Salt', quantity: 1 },
+      ],
+    },
+    'Baked Salmon': {
+      id: 'baked_salmon',
+      name: 'Запечений лосось',
+      image: '🐟',
+      ingredients: [
+        { id: 'Salmon', quantity: 500 },
+        { id: 'Lemon', quantity: 1 },
+        { id: 'Salt', quantity: 1 },
+        { id: 'Greens', quantity: 1 },
+      ],
+    },
+    'Tartlets with Mushrooms and Cheese': {
+      id: 'tartlets_mushrooms_cheese',
+      name: 'Тарталетки з грибами та сиром',
+      image: '🍄',
+      ingredients: [
+        { id: 'Mushroom', quantity: 8 },
+        { id: 'Cheese', quantity: 150 },
+        { id: 'Butter', quantity: 50 },
+        { id: 'Doughnut', quantity: 8 },
+      ],
+    },
+    'Mashed Potatoes with Pork': {
+      id: 'mashed_potatoes_pork',
+      name: 'Пюре зі свининою',
+      image: '🥩',
+      ingredients: [
+        { id: 'Potato', quantity: 5 },
+        { id: 'Pork', quantity: 300 },
+        { id: 'Salt', quantity: 1 },
+        { id: 'Butter', quantity: 50 },
+      ],
+    },
+    'Festive Cake': {
+      id: 'festive_cake',
+      name: 'Святковий торт',
+      image: '🎂',
+      ingredients: [
+        { id: 'Biscuit', quantity: 1 },
+        { id: 'Chocolate', quantity: 200 },
+        { id: 'Strawberry', quantity: 100 },
+        { id: 'Butter', quantity: 50 },
+      ],
+    },
+    'Canapes with Caviar': {
+      id: 'canapes_caviar',
+      name: 'Канапе з ікрою',
+      image: '🍢',
+      ingredients: [
+        { id: 'Bread', quantity: 1 },
+        { id: 'Butter', quantity: 50 },
+        { id: 'Crab', quantity: 50 },
+      ],
+    },
+    'Fruit Salad': {
+      id: 'fruit_salad',
+      name: 'Фруктовий салат',
+      image: '🍍',
+      ingredients: [
+        { id: 'Apple', quantity: 1 },
+        { id: 'Banana', quantity: 1 },
+        { id: 'Grapes', quantity: 100 },
+        { id: 'Pineapple', quantity: 1 },
+      ],
+    },
+    'Duck with Apples': {
+      id: 'duck_apples',
+      name: 'Качка з яблуками',
+      image: '🍗',
+      ingredients: [
+        { id: 'Meat', quantity: 1000 },
+        { id: 'Apple', quantity: 3 },
+        { id: 'Salt', quantity: 1 },
+        { id: 'Honey', quantity: 50 },
+      ],
+    },
+  };
+
+  constructor(controller, options) {
+    super(controller, options);
+
+    if (Storage.has(COOKING_GAME_STATE.toString())) {
+      this.#state = Storage.get(COOKING_GAME_STATE.toString());
+    } else {
+      this.#state = {
+        dishes: [],
+      };
+    }
+
+    this.#getProducts();
+  }
+
+  on() {
+    super.on();
+  }
+
+  off() {
+    super.off();
+  }
+
+  save() {
+    Storage.set(COOKING_GAME_STATE.toString(), this.#state);
+  }
+
+  #getProducts() {
+    if (Storage.has(SHOPPING_APP_PRODUCTS.toString())) {
+      const products =
+        Storage.get(SHOPPING_APP_PRODUCTS.toString()) || [];
+      this.#products = products.map((row) => {
+        const product = ShoppingApp.getProduct(row.id);
+        return {
+          id: row.id,
+          name: product.name,
+          image: product.image,
+          quantity: product.quantity,
+        };
+      });
+    } else {
+      this.#products = [];
+    }
+  }
+}
+
 class SceneController {
   #scenes = {};
   #currentScene;
@@ -1499,61 +1728,334 @@ class ShoppingApp {
       id: 'Potato',
       name: 'Картопля',
       image: '🥔',
+      price: 20,
+    },
+    Carrot: {
+      id: 'Carrot',
+      name: 'Морква',
+      image: '🥕',
+      price: 18,
+    },
+    Egg: {
+      id: 'Egg',
+      name: 'Яйце',
+      image: '🥚',
+      price: 7,
+    },
+    Peas: {
+      id: 'Peas',
+      name: 'Горошок',
+      image: '🌱',
+      price: 25,
+    },
+    Meat: {
+      id: 'Meat',
+      name: "М'ясо",
+      image: '🍖',
+      price: 180,
+    },
+    Cheese: {
+      id: 'Cheese',
+      name: 'Сир',
+      image: '🧀',
+      price: 150,
+    },
+    Garlic: {
+      id: 'Garlic',
+      name: 'Часник',
+      image: '🧄',
+      price: 50,
+    },
+    Salmon: {
+      id: 'Salmon',
+      name: 'Лосось',
+      image: '🐟',
+      price: 400,
+    },
+    Lemon: {
+      id: 'Lemon',
+      name: 'Лимон',
+      image: '🍋',
+      price: 60,
+    },
+    Greens: {
+      id: 'Greens',
+      name: 'Зелень',
+      image: '🌿',
       price: 15,
     },
-    Carrot: { id: 'Carrot', name: 'Морква', image: '🥕', price: 12 },
-    Eggs: { id: 'Eggs', name: 'Яйця', image: '🥚', price: 40 },
-    Peas: { id: 'Peas', name: 'Горошок', image: '🌱', price: 25 },
-    Meat: { id: 'Meat', name: "М'ясо", image: '🍖', price: 150 },
-    Cheese: { id: 'Cheese', name: 'Сир', image: '🧀', price: 100 },
-    Garlic: { id: 'Garlic', name: 'Часник', image: '🧄', price: 20 },
-    Salmon: { id: 'Salmon', name: 'Лосось', image: '🐟', price: 200 },
-    Lemon: { id: 'Lemon', name: 'Лимон', image: '🍋', price: 30 },
-    Greens: { id: 'Greens', name: 'Зелень', image: '🌿', price: 15 },
-    Salt: { id: 'Salt', name: 'Сіль', image: '🧂', price: 10 },
-    Pork: { id: 'Pork', name: 'Свинина', image: '🥩', price: 130 },
+    Salt: {
+      id: 'Salt',
+      name: 'Сіль',
+      image: '🧂',
+      price: 10,
+    },
+    Pork: {
+      id: 'Pork',
+      name: 'Свинина',
+      image: '🥩',
+      price: 200,
+    },
     Biscuit: {
       id: 'Biscuit',
       name: 'Бісквіт',
       image: '🎂',
-      price: 50,
+      price: 80,
     },
     Strawberry: {
       id: 'Strawberry',
       name: 'Полуниця',
       image: '🍓',
-      price: 80,
+      price: 100,
     },
     Chocolate: {
       id: 'Chocolate',
       name: 'Шоколад',
       image: '🍫',
-      price: 60,
+      price: 70,
     },
-    Milk: { id: 'Milk', name: 'Молоко', image: '🥛', price: 35 },
-    Bread: { id: 'Bread', name: 'Хліб', image: '🍞', price: 25 },
-    Butter: { id: 'Butter', name: 'Масло', image: '🧈', price: 70 },
-    Apple: { id: 'Apple', name: 'Яблуко', image: '🍎', price: 20 },
-    Banana: { id: 'Banana', name: 'Банан', image: '🍌', price: 30 },
+    Milk: {
+      id: 'Milk',
+      name: 'Молоко',
+      image: '🥛',
+      price: 35,
+    },
+    Bread: {
+      id: 'Bread',
+      name: 'Хліб',
+      image: '🍞',
+      price: 25,
+    },
+    Butter: {
+      id: 'Butter',
+      name: 'Масло',
+      image: '🧈',
+      price: 90,
+    },
+    Apple: {
+      id: 'Apple',
+      name: 'Яблуко',
+      image: '🍎',
+      price: 25,
+    },
+    Banana: {
+      id: 'Banana',
+      name: 'Банан',
+      image: '🍌',
+      price: 40,
+    },
     Grapes: {
       id: 'Grapes',
       name: 'Виноград',
       image: '🍇',
-      price: 60,
+      price: 80,
     },
     Pineapple: {
       id: 'Pineapple',
       name: 'Ананас',
       image: '🍍',
+      price: 100,
+    },
+    Pickle: {
+      id: 'Pickle',
+      name: 'Маринований огірок',
+      image: '🥒',
+      price: 30,
+    },
+    Tomato: {
+      id: 'Tomato',
+      name: 'Помідор',
+      image: '🍅',
+      price: 45,
+    },
+    HotPepper: {
+      id: 'HotPepper',
+      name: 'Перець чилі',
+      image: '🌶️',
+      price: 50,
+    },
+    Corn: {
+      id: 'Corn',
+      name: 'Кукурудза',
+      image: '🌽',
+      price: 30,
+    },
+    Mushroom: {
+      id: 'Mushroom',
+      name: 'Гриби',
+      image: '🍄',
+      price: 60,
+    },
+    Chestnut: {
+      id: 'Chestnut',
+      name: 'Каштан',
+      image: '🌰',
+      price: 80,
+    },
+    Avocado: {
+      id: 'Avocado',
+      name: 'Авокадо',
+      image: '🥑',
+      price: 70,
+    },
+    Eggplant: {
+      id: 'Eggplant',
+      name: 'Баклажан',
+      image: '🍆',
+      price: 55,
+    },
+    Kiwi: {
+      id: 'Kiwi',
+      name: 'Ківі',
+      image: '🥝',
+      price: 50,
+    },
+    Coconut: {
+      id: 'Coconut',
+      name: 'Кокос',
+      image: '🥥',
+      price: 120,
+    },
+    Crab: {
+      id: 'Crab',
+      name: 'Краб',
+      image: '🦀',
+      price: 300,
+    },
+    Shrimp: {
+      id: 'Shrimp',
+      name: 'Креветка',
+      image: '🍤',
+      price: 300,
+    },
+    Squid: {
+      id: 'Squid',
+      name: 'Кальмар',
+      image: '🦑',
+      price: 280,
+    },
+    Lobster: {
+      id: 'Lobster',
+      name: 'Лобстер',
+      image: '🦞',
+      price: 500,
+    },
+    Oyster: {
+      id: 'Oyster',
+      name: 'Устриця',
+      image: '🦪',
+      price: 400,
+    },
+    Rice: {
+      id: 'Rice',
+      name: 'Рис',
+      image: '🍚',
+      price: 52,
+    },
+    Spaghetti: {
+      id: 'Spaghetti',
+      name: 'Спагеті',
+      image: '🍝',
+      price: 40,
+    },
+    SweetPotato: {
+      id: 'SweetPotato',
+      name: 'Батат',
+      image: '🍠',
+      price: 70,
+    },
+    Honey: {
+      id: 'Honey',
+      name: 'Мед',
+      image: '🍯',
+      price: 150,
+    },
+    Doughnut: {
+      id: 'Doughnut',
+      name: 'Пончик',
+      image: '🍩',
+      price: 35,
+    },
+    Cookie: {
+      id: 'Cookie',
+      name: 'Печиво',
+      image: '🍪',
+      price: 40,
+    },
+    Beer: {
+      id: 'Beer',
+      name: 'Пиво',
+      image: '🍺',
+      price: 50,
+    },
+    Wine: {
+      id: 'Wine',
+      name: 'Вино',
+      image: '🍷',
+      price: 150,
+    },
+    Cocktail: {
+      id: 'Cocktail',
+      name: 'Коктейль',
+      image: '🍸',
+      price: 150,
+    },
+    TropicalDrink: {
+      id: 'TropicalDrink',
+      name: 'Тропічний напій',
+      image: '🍹',
+      price: 120,
+    },
+    Champagne: {
+      id: 'Champagne',
+      name: 'Шампанське',
+      image: '🍾',
+      price: 200,
+    },
+    Tea: {
+      id: 'Tea',
+      name: 'Чай',
+      image: '🍵',
+      price: 60,
+    },
+    Coffee: {
+      id: 'Coffee',
+      name: 'Кава',
+      image: '☕',
+      price: 80,
+    },
+    BabyBottle: {
+      id: 'BabyBottle',
+      name: 'Дитяча суміш',
+      image: '🍼',
+      price: 60,
+    },
+    Cucumber: {
+      id: 'Cucumber',
+      name: 'Огірок',
+      image: '🥒',
+      price: 35,
+    },
+    Peach: {
+      id: 'Peach',
+      name: 'Персик',
+      image: '🍑',
       price: 90,
     },
-    Pickles: {
-      id: 'Pickles',
-      name: 'Мариновані огірки',
-      image: '🥒',
+    Cherries: {
+      id: 'Cherries',
+      name: 'Вишні',
+      image: '🍒',
+      price: 120,
+    },
+    Lemonade: {
+      id: 'Lemonade',
+      name: 'Лимонад',
+      image: '🍹',
       price: 45,
     },
   };
+
   #cart = [];
 
   #totalElement;
@@ -1571,6 +2073,10 @@ class ShoppingApp {
 
   constructor() {
     this.#loadCart();
+  }
+
+  static getProduct(id) {
+    return ShoppingApp.instance.#products[id];
   }
 
   toggle() {
