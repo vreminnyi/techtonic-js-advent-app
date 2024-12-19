@@ -51,6 +51,69 @@ const DIALOG_TYPE = {
 
 const MONEY = Symbol('MONEY');
 
+function dragElement(elmnt) {
+  let pos1 = 0,
+    pos2 = 0,
+    pos3 = 0,
+    pos4 = 0;
+
+  let headerElement = document.getElementById(elmnt.id + '-header');
+  if (headerElement) {
+    headerElement.onmousedown = dragMouseDown;
+    headerElement.ontouchstart = dragMouseDown;
+  } else {
+    elmnt.onmousedown = dragMouseDown;
+    elmnt.ontouchstart = dragMouseDown;
+  }
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+
+    if (e.type === 'touchstart') {
+      pos3 = e.touches[0].clientX;
+      pos4 = e.touches[0].clientY;
+    } else {
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+    }
+
+    document.onmouseup = closeDragElement;
+    document.ontouchend = closeDragElement;
+    document.onmousemove = elementDrag;
+    document.ontouchmove = elementDrag;
+    elmnt.classList.add('dragging');
+  }
+
+  function elementDrag(e) {
+    e = e || window.event;
+    e.preventDefault();
+
+    if (e.type === 'touchmove') {
+      pos1 = pos3 - e.touches[0].clientX;
+      pos2 = pos4 - e.touches[0].clientY;
+      pos3 = e.touches[0].clientX;
+      pos4 = e.touches[0].clientY;
+    } else {
+      pos1 = pos3 - e.clientX;
+      pos2 = pos4 - e.clientY;
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+    }
+
+    elmnt.style.top = elmnt.offsetTop - pos2 + 'px';
+    elmnt.style.left = elmnt.offsetLeft - pos1 + 'px';
+  }
+
+  function closeDragElement() {
+    document.onmouseup = null;
+    document.onmousemove = null;
+    document.ontouchend = null; // Видаляємо подію завершення торкання
+    document.ontouchmove = null; // Видаляємо подію переміщення торкання
+    elmnt.classList.remove('dragging');
+  }
+}
+
 // Класи
 class Encoder {
   static encode(text) {
@@ -1060,6 +1123,9 @@ class CookingGame extends Game {
   #state;
   #products;
 
+  #showFridge = false;
+  #showCooking = false;
+
   #dishes = {
     'Olivier salad': {
       id: 'olivier',
@@ -1239,16 +1305,7 @@ class CookingGame extends Game {
 
   constructor(controller, options) {
     super(controller, options);
-
-    if (Storage.has(COOKING_GAME_STATE.toString())) {
-      this.#state = Storage.get(COOKING_GAME_STATE.toString());
-    } else {
-      this.#state = {
-        dishes: [],
-      };
-    }
-
-    this.#getProducts();
+    this.#getData();
   }
 
   on() {
@@ -1262,6 +1319,18 @@ class CookingGame extends Game {
 
   save() {
     Storage.set(COOKING_GAME_STATE.toString(), this.#state);
+  }
+
+  #getData() {
+    if (Storage.has(COOKING_GAME_STATE.toString())) {
+      this.#state = Storage.get(COOKING_GAME_STATE.toString());
+    } else {
+      this.#state = {
+        dishes: [],
+      };
+    }
+
+    this.#getProducts();
   }
 
   saveProducts() {
@@ -1304,19 +1373,28 @@ class CookingGame extends Game {
 
     // Холодильник
     const fridge = document.createElement('div');
-    fridge.className = 'fridge hidden';
+    fridge.className = 'fridge';
+    if (!this.#showFridge) DOMHelper.hideElements(fridge);
 
     const fridgeHeader = document.createElement('header');
     const fridgeTitle = document.createElement('h3');
-    fridgeTitle.textContent = '🧊 Холодильник';
+    fridgeTitle.textContent = '🧺 Холодильник';
+
+    const fridgeRefresh = document.createElement('button');
+    fridgeRefresh.textContent = '🔄';
+    fridgeRefresh.addEventListener('click', () => {
+      this.#getProducts();
+      this.createControls();
+    });
 
     const closeButton = document.createElement('button');
     closeButton.textContent = '❌';
     closeButton.addEventListener('click', () => {
       DOMHelper.hideElements(fridge);
+      this.#showFridge = false;
     });
 
-    fridgeHeader.append(fridgeTitle, closeButton);
+    fridgeHeader.append(fridgeTitle, fridgeRefresh, closeButton);
     fridge.append(fridgeHeader);
 
     const productList = document.createElement('div');
@@ -1332,26 +1410,36 @@ class CookingGame extends Game {
     fridge.append(productList);
 
     const fridgeButton = document.createElement('button');
-    fridgeButton.textContent = '🧊';
+    fridgeButton.textContent = '🧺';
     fridgeButton.addEventListener('click', () => {
       DOMHelper.showElements(fridge);
+      this.#showFridge = true;
     });
 
     // Приготування страви
     const cooking = document.createElement('div');
-    cooking.className = 'cooking hidden';
+    cooking.className = 'cooking';
+    if (!this.#showCooking) DOMHelper.hideElements(cooking);
 
     const cookingHeader = document.createElement('header');
     const cookingTitle = document.createElement('h3');
     cookingTitle.textContent = '🧑‍🍳 Готуємо до свята';
 
+    const cookingRefresh = document.createElement('button');
+    cookingRefresh.textContent = '🔄';
+    cookingRefresh.addEventListener('click', () => {
+      this.#getData();
+      this.createControls();
+    });
+
     const closeCooking = document.createElement('button');
     closeCooking.textContent = '❌';
     closeCooking.addEventListener('click', () => {
       DOMHelper.hideElements(cooking);
+      this.#showCooking = false;
     });
 
-    cookingHeader.append(cookingTitle, closeCooking);
+    cookingHeader.append(cookingTitle, cookingRefresh, closeCooking);
     cooking.append(cookingHeader);
 
     const dishList = document.createElement('div');
@@ -1367,6 +1455,7 @@ class CookingGame extends Game {
     cookingButton.textContent = '🧑‍🍳';
     cookingButton.addEventListener('click', () => {
       DOMHelper.showElements(cooking);
+      this.#showCooking = true;
     });
 
     const gameContainer = document.createElement('div');
@@ -1439,7 +1528,10 @@ class CookingGame extends Game {
   }
 
   #cook(dish) {
-    const { ingredients } = dish;
+    const { ingredients, name } = dish;
+
+    if (!confirm(`Приготувати ${name}?`)) return;
+
     const enoughIngredients = ingredients.every((ingredient) =>
       this.#products.find(
         (product) =>
@@ -1464,7 +1556,7 @@ class CookingGame extends Game {
 
     this.#state.dishes.push(dish.id);
     this.save();
-    this.#getProducts();
+    this.#getData();
     this.createControls();
   }
 
@@ -1671,6 +1763,13 @@ class SmartphoneController {
   constructor() {
     this.button = document.getElementById('smartphone-button');
     this.smartphone = document.getElementById('smartphone');
+
+    const dragHeader = document.createElement('div');
+    dragHeader.id = 'smartphone-header';
+    dragHeader.textContent = '🤚';
+    this.smartphone.prepend(dragHeader);
+    dragElement(this.smartphone);
+
     this.appButtonContainer = document.querySelector(
       '#smartphone .app-buttons'
     );
@@ -2516,8 +2615,10 @@ class ShoppingApp {
       const index = products.findIndex(
         (row) => row.id === product.id
       );
-      if (index >= 0) products[index].quantity += product.quantity;
-      else products.push(product);
+      if (index >= 0) {
+        products[index].quantity =
+          Number(products[index].quantity) + Number(product.quantity);
+      } else products.push(product);
     });
 
     Storage.set(SHOPPING_APP_PRODUCTS.toString(), products);
