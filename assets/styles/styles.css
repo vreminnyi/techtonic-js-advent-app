@@ -944,6 +944,7 @@ html {
 
 #dialog-quiz-container > div {
   display: flex;
+  flex-wrap: wrap;
 }
 
 #dialog-quiz-container > div > button {
@@ -1035,7 +1036,9 @@ html {
   bottom: 0;
   width: 100%;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: .5rem;
   padding: 1rem;
 }
 
@@ -1043,14 +1046,6 @@ html {
 #music-game-container #music-game-controls {
   display: flex;
   justify-content: space-between;
-}
-
-#music-game-container #music-game-options {
-  flex: 1;
-}
-
-#music-game-container #music-game-controls {
-  padding-left: 1rem;
 }
 
 #music-game-container #music-game-options button {
@@ -1219,7 +1214,7 @@ html {
 
 #cooking-game-container .cooking .dish .ingredients {
   list-style: none;
-  padding-left: 2.5rem;
+  padding-left: 3rem;
   font-size: .8rem;
 }
 

@@ -41,6 +41,16 @@ const COOKING_GAME_STATE = Symbol('COOKING_GAME_STATE');
 const SHOPPING_APP_CART = Symbol('SHOPPING_APP_CART');
 const SHOPPING_APP_PRODUCTS = Symbol('SHOPPING_APP_PRODUCTS');
 
+const STORAGE_KEYS = [
+  COOKING_GAME_STATE,
+  GROW_TREE_STATE,
+  HELPER_GAME_STATE,
+  MUSIC_GAME_STATE,
+  SHOPPING_APP_CART,
+  SHOPPING_APP_PRODUCTS,
+  SNOWFLAKE_GAME_STATE,
+];
+
 // Dialog
 const DIALOG_TEXT = Symbol('DIALOG_TEXT');
 const DIALOG_QUIZ = Symbol('DIALOG_QUIZ');
@@ -234,7 +244,10 @@ class Greeting {
     this.#parseHashData();
 
     if (this.#hash) {
-      if (!this.isViewed()) this.#showGreeting();
+      if (!this.isViewed()) {
+        this.#showGreeting();
+        GameController.instance.reset();
+      }
     } else {
       this.#showGreetingForm();
     }
@@ -304,7 +317,11 @@ class Greeting {
       Storage.set(Greeting.hashParam, this.#hash);
       DOMHelper.hideElements(cardElement, overlayElement);
       DOMHelper.removeElements(cardElement, overlayElement);
-      GameController.instance.start();
+      GameController.instance.start({
+        scene: STREET_SCENE,
+        moneyText: document.getElementById('money'),
+        helperDialog: document.getElementById('helper-dialog'),
+      });
     });
   }
 
@@ -429,6 +446,13 @@ class GameController {
     };
 
     updateCounter();
+  }
+
+  reset() {
+    this.#money = 0;
+    [...STORAGE_KEYS, MONEY].forEach((key) =>
+      Storage.remove(key.toString())
+    );
   }
 }
 
@@ -1049,8 +1073,7 @@ class MusicGame extends Game {
     this.optionsContainer.id = 'music-game-options';
 
     this.controls.appendChild(this.playButton);
-    DOMHelper.prependElements(
-      this.container,
+    this.container.append(
       this.audio,
       this.controls,
       this.optionsContainer
