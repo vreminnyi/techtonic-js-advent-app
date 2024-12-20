@@ -62,7 +62,7 @@ const DIALOG_TYPE = {
 const MONEY = Symbol('MONEY');
 
 const SPECIAL_HASH =
-  'JTdCJTIydGl0bGUlMjIlM0ElMjJNZXJyeSUyMENocmlzdG1hcyUyMCVGMCU5RiU5QSU4MCUyMiUyQyUyMnRleHQlMjIlM0ElMjIlMjIlN0Q=';
+  'JTdCJTIydGl0bGUlMjIlM0ElMjIlRDAlOTIlRDAlQjUlRDElODElRDAlQjUlRDAlQkIlRDAlQjglRDElODUlMjAlRDElODElRDAlQjIlRDElOEYlRDElODIlMjAlM0F0ZWNodG9uaWMlM0ElMjIlMkMlMjJ0ZXh0JTIyJTNBJTIyJTIyJTdE';
 
 function dragElement(elmnt) {
   let pos1 = 0,
@@ -128,6 +128,23 @@ function dragElement(elmnt) {
 }
 
 // Класи
+class Replacer {
+  static #replacements = {
+    ':techtonic:': `<img src="./assets/images/techtonic_ico_small.png" width="50">`,
+  };
+
+  static replaceText(text) {
+    let result = text;
+
+    for (const [key, value] of Object.entries(this.#replacements)) {
+      const regex = new RegExp(key, 'g');
+      result = result.replace(regex, value);
+    }
+
+    return result;
+  }
+}
+
 class Encoder {
   static encode(text) {
     if (!['string', 'number', 'boolean'].includes(typeof text)) {
@@ -236,6 +253,10 @@ class Greeting {
     return Greeting.#instance;
   }
 
+  get isSpecialHash() {
+    return this.#hash === SPECIAL_HASH;
+  }
+
   isViewed() {
     return (
       Storage.has(Greeting.hashParam) &&
@@ -309,8 +330,13 @@ class Greeting {
     const titleElement = document.createElement('h1');
     const textElement = document.createElement('p');
 
-    titleElement.textContent = this.title;
-    textElement.textContent = this.text;
+    if (this.isSpecialHash) {
+      titleElement.innerHTML = Replacer.replaceText(this.title);
+      textElement.innerHTML = `<iframe style="width:100%;height: 300px;" src="https://www.youtube.com/embed/4Tm3IXz6Eh0?si=_p74mBz6D_feLq6z" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+    } else {
+      titleElement.textContent = this.title;
+      textElement.textContent = this.text;
+    }
 
     cardElement.prepend(titleElement, textElement);
     DOMHelper.showElements(cardElement, overlayElement, startButton);
@@ -3104,9 +3130,6 @@ const sceneDict = {
     ],
   },
 };
-
-const isSpecialHash =
-  Storage.get(Greeting.hashParam) === SPECIAL_HASH;
 
 const gameDict = {
   [SNOWFLAKE_GAME]: {
