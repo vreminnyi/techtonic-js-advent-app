@@ -942,6 +942,15 @@ html {
   }
 }
 
+@keyframes fade {
+  100% {
+    opacity: 1;
+  }
+  0% {
+    opacity: 0;
+  }
+}
+
 #dialog-quiz-container > div {
   display: flex;
   flex-wrap: wrap;
@@ -955,6 +964,7 @@ html {
   background-color: rgba(0, 0, 0, 0.3);
   color: #fff;
   cursor: pointer;
+  flex: 1 1 calc(100% / 4 - 1rem);
 }
 
 #dialog-quiz-container > div > button.success {
@@ -965,6 +975,19 @@ html {
 #dialog-quiz-container > div > button.failure {
   border: 1px solid red;
   background-color: rgba(255, 0, 0, 0.3);
+}
+
+#snowflake-effect-container .bonus {
+  position: absolute;
+  top: 2rem;
+  text-align: center;
+  left: calc(50% - 4rem);
+  width: 8rem;
+  animation: fade 1s ease-in;
+  background-color: #ebfbf5;
+  border-radius: 10px;
+  z-index: 0;
+  opacity: .9;
 }
 
 .snowflake {
@@ -994,6 +1017,14 @@ html {
 .snowflake.money {
   cursor: pointer;
   z-index: 1;
+}
+
+.snowflake.money.large {
+  font-size: 3rem;
+}
+
+.snowflake.money.big {
+  font-size: 4rem;
 }
 
 #grow-tree-game-container {

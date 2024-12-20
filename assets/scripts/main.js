@@ -61,6 +61,9 @@ const DIALOG_TYPE = {
 
 const MONEY = Symbol('MONEY');
 
+const SPECIAL_HASH =
+  'JTdCJTIydGl0bGUlMjIlM0ElMjJNZXJyeSUyMENocmlzdG1hcyUyMCVGMCU5RiU5QSU4MCUyMiUyQyUyMnRleHQlMjIlM0ElMjIlMjIlN0Q=';
+
 function dragElement(elmnt) {
   let pos1 = 0,
     pos2 = 0,
@@ -151,17 +154,17 @@ class Storage {
   static localStorage = localStorage;
 
   static has(key) {
-    return localStorage.getItem(key) !== null;
+    return localStorage.getItem(Encoder.encode(key)) !== null;
   }
 
   static get(key) {
-    let item = localStorage.getItem(key);
+    let item = localStorage.getItem(Encoder.encode(key));
+
+    if (item === null) return null;
 
     if (typeof item !== 'string') return item;
 
-    if (item === 'undefined') return undefined;
-
-    if (item === 'null') return null;
+    item = Encoder.decode(item);
 
     // Check for numbers and floats
     if (/^'-?\d{1,}?\.?\d{1,}'$/.test(item)) return Number(item);
@@ -183,11 +186,11 @@ class Storage {
       value = JSON.stringify(value);
     }
 
-    localStorage.setItem(key, value);
+    localStorage.setItem(Encoder.encode(key), Encoder.encode(value));
   }
 
   static remove(key) {
-    localStorage.removeItem(key);
+    localStorage.removeItem(Encoder.encode(key));
   }
 }
 
@@ -359,6 +362,7 @@ class GameController {
 
   #money = 0;
   #moneyContainer;
+  #drawValue = 0;
   #dialog;
 
   static get instance() {
@@ -418,6 +422,7 @@ class GameController {
   }
 
   changeMoney(change) {
+    this.#drawValue = this.#money;
     this.#money += Number(change);
     Storage.set(MONEY.toString(), this.#money);
     this.drawMoney();
@@ -428,18 +433,20 @@ class GameController {
     const increment =
       (this.#money - currentMoney) / (duration / 16.67);
 
-    let currentValue = currentMoney;
+    this.#drawValue = currentMoney;
 
     const updateCounter = () => {
       if (!increment) return;
-      currentValue += increment;
+      this.#drawValue += increment;
       if (
-        (increment > 0 && currentValue >= this.#money) ||
-        (increment < 0 && currentValue <= this.#money)
+        (increment > 0 && this.#drawValue >= this.#money) ||
+        (increment < 0 && this.#drawValue <= this.#money)
       ) {
         this.#moneyContainer.textContent = this.#money;
       } else {
-        this.#moneyContainer.textContent = Math.round(currentValue);
+        this.#moneyContainer.textContent = Math.round(
+          this.#drawValue
+        );
         requestAnimationFrame(updateCounter);
       }
     };
@@ -563,14 +570,22 @@ class SnowflakeGame extends Game {
     snowflake.classList.add(this.#snowflakeClassName);
     snowflake.classList.add(this.#moneyClassName);
 
+    const random = Math.random();
+
+    if (random < 0.01) {
+      snowflake.classList.add('big');
+    } else if (random < 0.05) {
+      snowflake.classList.add('large');
+    }
+
     snowflake.addEventListener('click', (e) => {
       this.clickMoneySnowflake(e.target);
     });
 
     const containerWidth = this.container.clientWidth;
-    const shift = Math.min(Math.random(), 0.9);
+    const shift = Math.min(random, 0.9);
     snowflake.style.left = `${shift * containerWidth}px`;
-    snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
+    snowflake.style.animationDuration = `${random * 5 + 5}s`;
     snowflake.innerText = this.#moneyEmoji;
     this.container.appendChild(snowflake);
     this.#snowflakes.push(snowflake);
@@ -578,14 +593,44 @@ class SnowflakeGame extends Game {
 
   clickMoneySnowflake(element) {
     DOMHelper.hideElements(element);
-    const containerWidth = this.container.clientWidth;
-    element.style.left = `${Math.random() * containerWidth}px`;
-    this.controller.changeMoney(this.#moneyEmojiValue);
     this.#state.collected++;
+
+    let award = this.#moneyEmojiValue;
+
+    if (element.classList.contains('big')) {
+      award = 50;
+    }
+
+    if (element.classList.contains('large')) {
+      award = 10;
+    }
+
+    if (this.#state.collected % 100 === 0) {
+      award = 100;
+
+      const bonus = document.createElement('div');
+      bonus.classList.add('bonus');
+      bonus.innerHTML = `<h1>+${award}💸</h1><h4>${
+        this.#state.collected
+      }❄️</h4>`;
+
+      this.container.prepend(bonus);
+
+      setTimeout(() => {
+        if (bonus) DOMHelper.removeElements(bonus);
+      }, 3000);
+    }
+
+    this.controller.changeMoney(award);
     this.#saveState();
     setTimeout(() => {
-      if (element) DOMHelper.showElements(element);
-    }, 5000 + Math.random() * 1000);
+      if (element) {
+        this.#snowflakes = this.#snowflakes.filter(
+          (el) => el !== element
+        );
+        DOMHelper.removeElements(element);
+      }
+    }, 2000 + Math.random() * 1000);
   }
 
   #saveState() {
@@ -3059,6 +3104,9 @@ const sceneDict = {
     ],
   },
 };
+
+const isSpecialHash =
+  Storage.get(Greeting.hashParam) === SPECIAL_HASH;
 
 const gameDict = {
   [SNOWFLAKE_GAME]: {
