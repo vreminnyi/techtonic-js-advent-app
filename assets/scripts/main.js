@@ -40,6 +40,7 @@ const COOKING_GAME_STATE = Symbol('COOKING_GAME_STATE');
 
 const SHOPPING_APP_CART = Symbol('SHOPPING_APP_CART');
 const SHOPPING_APP_PRODUCTS = Symbol('SHOPPING_APP_PRODUCTS');
+const TODO_APP_STATE = Symbol('TODO_APP_STATE');
 
 const STORAGE_KEYS = [
   COOKING_GAME_STATE,
@@ -59,6 +60,7 @@ const DIALOG_TYPE = {
   quiz: DIALOG_QUIZ,
 };
 
+const TOTAL_MONEY = Symbol('TOTAL_MONEY');
 const MONEY = Symbol('MONEY');
 
 const SPECIAL_HASH =
@@ -345,11 +347,7 @@ class Greeting {
       Storage.set(Greeting.hashParam, this.#hash);
       DOMHelper.hideElements(cardElement, overlayElement);
       DOMHelper.removeElements(cardElement, overlayElement);
-      GameController.instance.start({
-        scene: STREET_SCENE,
-        moneyText: document.getElementById('money'),
-        helperDialog: document.getElementById('helper-dialog'),
-      });
+      TodoApp.instance.init();
     });
   }
 
@@ -397,6 +395,10 @@ class GameController {
     }
 
     return GameController.#instance;
+  }
+
+  get isStarted() {
+    return Greeting.instance.isViewed();
   }
 
   get treeSize() {
@@ -450,7 +452,13 @@ class GameController {
   changeMoney(change) {
     this.#drawValue = this.#money;
     this.#money += Number(change);
+    const total = Storage.get(TOTAL_MONEY.toString()) ?? 0;
+    Storage.set(
+      TOTAL_MONEY.toString(),
+      Number(total) + Number(change)
+    );
     Storage.set(MONEY.toString(), this.#money);
+    TodoApp.instance.init();
     this.drawMoney();
   }
 
@@ -562,6 +570,7 @@ class SnowflakeGame extends Game {
     } else {
       this.#state = {
         collected: 0,
+        catchSuper: false,
       };
     }
   }
@@ -609,9 +618,9 @@ class SnowflakeGame extends Game {
     });
 
     const containerWidth = this.container.clientWidth;
-    const shift = Math.min(random, 0.9);
+    const shift = Math.min(Math.random(), 0.9);
     snowflake.style.left = `${shift * containerWidth}px`;
-    snowflake.style.animationDuration = `${random * 5 + 5}s`;
+    snowflake.style.animationDuration = `${Math.random() * 5 + 5}s`;
     snowflake.innerText = this.#moneyEmoji;
     this.container.appendChild(snowflake);
     this.#snowflakes.push(snowflake);
@@ -625,6 +634,7 @@ class SnowflakeGame extends Game {
 
     if (element.classList.contains('big')) {
       award = 50;
+      this.#state.catchSuper = true;
     }
 
     if (element.classList.contains('large')) {
@@ -661,6 +671,7 @@ class SnowflakeGame extends Game {
 
   #saveState() {
     Storage.set(SNOWFLAKE_GAME_STATE.toString(), this.#state);
+    TodoApp.instance.init();
   }
 }
 
@@ -1002,6 +1013,7 @@ class GrowTreeGame extends Game {
   save() {
     Storage.set(GROW_TREE_STATE.toString(), this.#state);
     this.writeStatistic();
+    TodoApp.instance.init();
   }
 }
 
@@ -1066,6 +1078,7 @@ class HelperGame extends Game {
 
   save() {
     Storage.set(HELPER_GAME_STATE.toString(), this.#state);
+    TodoApp.instance.init();
   }
 }
 
@@ -1203,6 +1216,7 @@ class MusicGame extends Game {
 
   save() {
     Storage.set(MUSIC_GAME_STATE.toString(), this.#state);
+    TodoApp.instance.init();
   }
 }
 
@@ -1407,6 +1421,7 @@ class CookingGame extends Game {
 
   save() {
     Storage.set(COOKING_GAME_STATE.toString(), this.#state);
+    TodoApp.instance.init();
   }
 
   #getData() {
@@ -1730,7 +1745,6 @@ class SceneController {
   }
 
   change(scene) {
-    SmartphoneController.instance.toggle(false);
     const sceneInstance = this.#scenes[scene];
 
     if (!sceneInstance) return;
@@ -1909,6 +1923,12 @@ class SmartphoneController {
         title: 'Shopping',
         logo: '🛍️',
         controller: ShoppingApp,
+      },
+      {
+        id: 'todo-app',
+        title: 'TODO',
+        logo: '📝',
+        controller: TodoApp,
       },
     ].forEach((app) => {
       const content = document.createElement('div');
@@ -2714,9 +2734,304 @@ class ShoppingApp {
     this.#saveCart();
 
     GameController.instance.changeMoney(-total);
+    TodoApp.instance.init();
   }
 }
 
+class TodoApp {
+  static #instance;
+
+  #container;
+
+  #isActive = false;
+  #state = {};
+
+  #tasks = {
+    0: {
+      id: 0,
+      text: 'Почати підготовку до свята',
+      reward: 100,
+      isReady: (args) => args.isStarted === true,
+    },
+    1: {
+      id: 1,
+      text: 'Заробити 1000 грн.',
+      reward: 100,
+      isReady: (args) => args.money >= 1000,
+    },
+    2: {
+      id: 2,
+      text: 'Заробити 2000 грн.',
+      reward: 200,
+      isReady: (args) => args.money >= 2000,
+    },
+    3: {
+      id: 3,
+      text: 'Заробити 5000 грн.',
+      reward: 500,
+      isReady: (args) => args.money >= 5000,
+    },
+    4: {
+      id: 4,
+      text: 'Заробити 8000 грн.',
+      reward: 800,
+      isReady: (args) => args.money >= 8000,
+    },
+    5: {
+      id: 5,
+      text: 'Заробити 10000 грн.',
+      reward: 1000,
+      isReady: (args) => args.money >= 10000,
+    },
+    6: {
+      id: 6,
+      text: 'Зробити замовлення в Shopping',
+      reward: 200,
+      isReady: (args) => args.shoppingOrderMade === true,
+    },
+    7: {
+      id: 7,
+      text: 'Приготувати 1 страву',
+      reward: 50,
+      isReady: (args) => args.dishesCooked >= 1,
+    },
+    8: {
+      id: 8,
+      text: 'Приготувати 3 страви',
+      reward: 100,
+      isReady: (args) => args.dishesCooked >= 3,
+    },
+    9: {
+      id: 9,
+      text: 'Приготувати 5 страв',
+      reward: 250,
+      isReady: (args) => args.dishesCooked >= 5,
+    },
+    10: {
+      id: 10,
+      text: 'Приготувати 10 страв',
+      reward: 500,
+      isReady: (args) => args.dishesCooked >= 10,
+    },
+    11: {
+      id: 11,
+      text: 'Додати пісню до плейліста',
+      reward: 10,
+      isReady: (args) => args.songsAdded >= 1,
+    },
+    12: {
+      id: 12,
+      text: 'Додати 3 пісні до плейліста',
+      reward: 50,
+      isReady: (args) => args.songsAdded >= 3,
+    },
+    13: {
+      id: 13,
+      text: 'Додати 6 пісень до плейліста',
+      reward: 150,
+      isReady: (args) => args.songsAdded >= 6,
+    },
+    14: {
+      id: 14,
+      text: 'Зловити супер-сніжинку',
+      reward: 100,
+      isReady: (args) => args.superSnowflakeCaught === true,
+    },
+    15: {
+      id: 15,
+      text: 'Виграти в вікторині помічника',
+      reward: 200,
+      isReady: (args) => args.quizWon === true,
+    },
+    16: {
+      id: 16,
+      text: 'Посадити ялинку',
+      reward: 100,
+      isReady: (args) => args.treePlanted === true,
+    },
+    17: {
+      id: 17,
+      text: 'Полити ялинку 5 разів',
+      reward: 200,
+      isReady: (args) => args.treeWatered >= 5,
+    },
+    18: {
+      id: 18,
+      text: 'Полити ялинку 10 разів',
+      reward: 500,
+      isReady: (args) => args.treeWatered >= 10,
+    },
+    19: {
+      id: 19,
+      text: 'Полити ялинку 15 разів',
+      reward: 1000,
+      isReady: (args) => args.treeWatered >= 15,
+    },
+    20: {
+      id: 20,
+      text: 'Виростити ялинку 100 см.',
+      reward: 100,
+      isReady: (args) =>
+        args.treeHeight !== 999 && args.treeHeight >= 3,
+    },
+    21: {
+      id: 21,
+      text: 'Виростити ялинку 150 см.',
+      reward: 300,
+      isReady: (args) =>
+        args.treeHeight !== 999 && args.treeHeight >= 5,
+    },
+    22: {
+      id: 22,
+      text: 'Виростити ялинку 250 см.',
+      reward: 500,
+      isReady: (args) =>
+        args.treeHeight !== 999 && args.treeHeight >= 7,
+    },
+  };
+
+  static get instance() {
+    if (!TodoApp.#instance) {
+      TodoApp.#instance = new TodoApp();
+    }
+
+    return TodoApp.#instance;
+  }
+
+  constructor() {
+    this.#state = Storage.get(TODO_APP_STATE.toString()) || {
+      tasks: [],
+    };
+  }
+
+  toggle() {
+    return (this.#isActive = !this.#isActive);
+  }
+
+  #gameState() {
+    const { dishes } = Storage.get(COOKING_GAME_STATE.toString()) ?? {
+      dishes: [],
+    };
+    const { songs } = Storage.get(MUSIC_GAME_STATE.toString()) ?? {
+      songs: [],
+    };
+    const { quizzes } = Storage.get(HELPER_GAME_STATE.toString()) ?? {
+      quizzes: [],
+    };
+    const { actions, level } = Storage.get(
+      GROW_TREE_STATE.toString()
+    ) ?? {
+      actions: [],
+      level: 999,
+    };
+    const { catchSuper } = Storage.get(
+      SNOWFLAKE_GAME_STATE.toString()
+    ) ?? {
+      catchSuper: false,
+    };
+
+    const treeWatered = actions.filter(
+      (action) => action === Symbol.keyFor(GROW_TREE_ACTION_WATER)
+    ).length;
+
+    return {
+      isStarted: GameController.instance.isStarted,
+      money: Storage.get(TOTAL_MONEY.toString()) ?? 0,
+      shoppingOrderMade: Storage.has(
+        SHOPPING_APP_PRODUCTS.toString()
+      ),
+      dishesCooked: dishes.length,
+      songsAdded: songs.length,
+      superSnowflakeCaught: catchSuper,
+      quizWon: quizzes.length > 0,
+      treePlanted: level !== 999,
+      treeWatered: treeWatered,
+      treeHeight: level,
+    };
+  }
+
+  #taskList() {
+    const state = this.#gameState();
+
+    return Object.values(this.#tasks)
+      .map((task) => {
+        const index = this.#state.tasks.findIndex(
+          (id) => task.id === id
+        );
+        return {
+          ...task,
+          isReady: task.isReady(state),
+          done: index >= 0,
+        };
+      })
+      .toSorted((a, b) => {
+        if (a.done && !b.done) return 1;
+        if (!a.done && b.done) return -1;
+        if (a.isReady && !b.isReady) return -1;
+        if (!a.isReady && b.isReady) return 1;
+        return a.id - b.id;
+      });
+  }
+
+  init(appContainer) {
+    if (!this.#container && appContainer) {
+      this.#container = appContainer;
+    }
+
+    const container = appContainer || this.#container;
+
+    container.innerHTML = '';
+
+    const body = document.createElement('div');
+    body.classList = 'todo-body';
+
+    const taskList = document.createElement('ul');
+    taskList.className = 'task-list';
+
+    const tasks = this.#taskList();
+
+    tasks.forEach((task) => {
+      const taskRow = document.createElement('li');
+      const taskText = document.createElement('div');
+      taskText.className = 'task-text';
+      taskText.textContent = task.text;
+
+      const taskButton = document.createElement('button');
+      taskButton.textContent = '○';
+
+      if (task.done) {
+        taskRow.classList.add('task-done');
+        taskButton.textContent = '◉';
+      } else if (task.isReady) {
+        taskRow.classList.add('task-ready');
+
+        taskButton.addEventListener('click', () =>
+          this.#completeTask(task.id)
+        );
+      }
+
+      taskRow.append(taskButton, taskText);
+      taskList.append(taskRow);
+    });
+
+    body.append(taskList);
+    container.append(body);
+  }
+
+  #completeTask(id) {
+    const index = this.#state.tasks.findIndex((task) => task === id);
+    if (index >= 0) return;
+
+    this.#state.tasks.push(id);
+    this.#save();
+    GameController.instance.changeMoney(this.#tasks[id].reward);
+  }
+
+  #save() {
+    Storage.set(TODO_APP_STATE.toString(), this.#state);
+    TodoApp.instance.init();
+  }
+}
 class SceneEffect {
   containerId = 'scene-effect-container';
   isActive = false;
