@@ -246,7 +246,6 @@ class Greeting {
     if (this.#hash) {
       if (!this.isViewed()) {
         this.#showGreeting();
-        GameController.instance.reset();
       }
     } else {
       this.#showGreetingForm();
@@ -446,13 +445,6 @@ class GameController {
     };
 
     updateCounter();
-  }
-
-  reset() {
-    this.#money = 0;
-    [...STORAGE_KEYS, MONEY].forEach((key) =>
-      Storage.remove(key.toString())
-    );
   }
 }
 
@@ -983,6 +975,8 @@ class HelperGame extends Game {
     const { id, dialog } = this.quizzes[randomIndex];
 
     dialog.on('win', (e) => {
+      const exists = this.#state.quizzes.includes(id);
+      if (exists) return;
       this.addQuiz(id);
       GameController.instance.changeMoney(e.prize);
     });
