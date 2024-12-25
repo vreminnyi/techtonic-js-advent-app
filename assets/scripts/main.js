@@ -2931,7 +2931,7 @@ class TodoApp {
     };
 
     const treeWatered = actions.filter(
-      (action) => action === Symbol.keyFor(GROW_TREE_ACTION_WATER)
+      ([action]) => action === Symbol.keyFor(GROW_TREE_ACTION_WATER)
     ).length;
 
     return {
